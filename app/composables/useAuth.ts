@@ -35,7 +35,20 @@ export const useAuth = () => {
     }
   }
 
+  const fetchMe = async () => {
+    try {
+      const response = await $fetch('http://localhost:3000/api/me', {
+        method: 'GET',
+        credentials: 'include'
+      })
+      return response      
+    } catch {
+      return null          
+    }
+  }
+
   return {
-    login
+    login,
+    fetchMe
   }
 }

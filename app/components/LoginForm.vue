@@ -105,7 +105,7 @@ const handleSubmit = async () => {
   font-weight: 700;
 }
 
-/* PrimeVue inputlarını mevcut tasarıma boyuyoruz */
+
 .login-form :deep(.p-inputtext) {
   height: 50px;
   padding: 0 15px;

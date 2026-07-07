@@ -1,6 +1,3 @@
-<script setup lang="ts">
-</script>
-
 <template>
   <main class="login-page">
     <section class="image-side">
@@ -54,6 +51,7 @@
   grid-template-columns: 1.08fr 1fr;
   background: #f5f5f5;
   overflow: hidden;
+  position: relative;
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
@@ -88,7 +86,7 @@
   background: #f7f7f7;
 }
 
-/* PrimeVue Card'ı kendi tasarımımıza boyuyoruz */
+
 .login-card {
   width: 100%;
   max-width: 440px;
@@ -97,7 +95,6 @@
   box-shadow: 0 22px 60px rgba(0, 0, 0, 0.12);
 }
 
-/* Card'ın kendi iç yapısındaki boşlukları ayarla */
 .login-card :deep(.p-card-body) {
   padding: 42px 40px;
 }
@@ -162,51 +159,31 @@
   font-size: 15px;
   font-weight: 500;
 }
-
 @media (max-width: 1000px) {
   .login-page {
     grid-template-columns: 1fr;
   }
 
+
   .image-side {
-    display: none;
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+
+  .image-side::after {
+    background: rgba(0, 0, 0, 0.45);
   }
 
   .form-side {
+    position: relative;
+    z-index: 1;
     padding: 28px;
-    background: #f5f5f5;
+    background: transparent;  
   }
 
-  .login-card {
-    max-width: 420px;
-  }
-
-  .login-card :deep(.p-card-body) {
-    padding: 34px 28px;
-  }
-
-  .card-header h1 {
-    font-size: 24px;
-  }
-
-  .logos {
-    height: 66px;
-    gap: 14px;
-  }
-
-  .logo-item {
-    width: 64px;
-    height: 64px;
-  }
-
-  .eru-logo {
-    width: 66px;
-    height: 66px;
-  }
-
-  .ardek-logo {
-    width: 56px;
-    height: 56px;
-  }
+ 
 }
+
 </style>
