@@ -1,7 +1,4 @@
 <script setup lang="ts">
-definePageMeta({
-  layout: false
-})
 </script>
 
 <template>
@@ -15,34 +12,36 @@ definePageMeta({
     </section>
 
     <section class="form-side">
-      <div class="login-card">
-        <div class="card-header">
-          <div class="logos">
-            <div class="logo-item">
-              <img
-                src="/assets/eru_logo.png"
-                alt="Erciyes Üniversitesi"
-                class="eru-logo"
-              />
+      <Card class="login-card">
+        <template #content>
+          <div class="card-header">
+            <div class="logos">
+              <div class="logo-item">
+                <img
+                  src="/assets/eru_logo.png"
+                  alt="Erciyes Üniversitesi"
+                  class="eru-logo"
+                />
+              </div>
+
+              <div class="logo-divider"></div>
+
+              <div class="logo-item">
+                <img
+                  src="/assets/ardekLogo.png"
+                  alt="Araştırma Dekanlığı"
+                  class="ardek-logo"
+                />
+              </div>
             </div>
 
-            <div class="logo-divider"></div>
-
-            <div class="logo-item">
-              <img
-                src="/assets/ardekLogo.png"
-                alt="Araştırma Dekanlığı"
-                class="ardek-logo"
-              />
-            </div>
+            <h1>Erciyes Üniversitesi</h1>
+            <p>Veri Analitiği Sistemi</p>
           </div>
 
-          <h1>Erciyes Üniversitesi</h1>
-          <p>Veri Analitiği Sistemi</p>
-        </div>
-
-        <LoginForm />
-      </div>
+          <LoginForm />
+        </template>
+      </Card>
     </section>
   </main>
 </template>
@@ -89,13 +88,22 @@ definePageMeta({
   background: #f7f7f7;
 }
 
+/* PrimeVue Card'ı kendi tasarımımıza boyuyoruz */
 .login-card {
   width: 100%;
   max-width: 440px;
-  padding: 42px 40px;
   border-radius: 18px;
   background: #ffffff;
   box-shadow: 0 22px 60px rgba(0, 0, 0, 0.12);
+}
+
+/* Card'ın kendi iç yapısındaki boşlukları ayarla */
+.login-card :deep(.p-card-body) {
+  padding: 42px 40px;
+}
+
+.login-card :deep(.p-card-content) {
+  padding: 0;
 }
 
 .card-header {
@@ -171,6 +179,9 @@ definePageMeta({
 
   .login-card {
     max-width: 420px;
+  }
+
+  .login-card :deep(.p-card-body) {
     padding: 34px 28px;
   }
 

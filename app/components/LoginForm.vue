@@ -44,41 +44,44 @@ const handleSubmit = async () => {
 
 <template>
   <form class="login-form" @submit.prevent="handleSubmit">
-    <div v-if="error" class="error-box">
+    <Message v-if="error" severity="error" :closable="false">
       {{ error }}
-    </div>
+    </Message>
 
     <div class="form-field">
       <label for="email">E-posta</label>
-      <input
+      <InputText
         id="email"
         v-model="email"
         type="email"
         placeholder="E-posta adresiniz"
-        class="form-input"
         :disabled="isLoading"
         required
+        fluid
         @blur="handleEmailBlur"
       />
     </div>
 
     <div class="form-field">
       <label for="password">Parola</label>
-      <input
+      <Password
         id="password"
         v-model="password"
-        type="password"
         placeholder="********"
-        class="form-input"
+        :feedback="false"
+        toggle-mask
         :disabled="isLoading"
         required
+        fluid
       />
     </div>
 
-    <button type="submit" class="login-button" :disabled="isLoading">
-      <span v-if="isLoading" class="loader"></span>
-      <span>{{ isLoading ? 'Giriş yapılıyor...' : 'Giriş Yap' }}</span>
-    </button>
+    <Button
+      type="submit"
+      class="login-button"
+      :label="isLoading ? 'Giriş yapılıyor...' : 'Giriş Yap'"
+      :loading="isLoading"
+    />
   </form>
 </template>
 
@@ -102,8 +105,8 @@ const handleSubmit = async () => {
   font-weight: 700;
 }
 
-.form-input {
-  width: 100%;
+/* PrimeVue inputlarını mevcut tasarıma boyuyoruz */
+.login-form :deep(.p-inputtext) {
   height: 50px;
   padding: 0 15px;
   border: 1.5px solid #111111;
@@ -111,87 +114,44 @@ const handleSubmit = async () => {
   background: #f3f4f6;
   color: #111111;
   font-size: 15px;
-  outline: none;
   transition: 0.2s ease;
 }
 
-.form-input::placeholder {
+.login-form :deep(.p-inputtext::placeholder) {
   color: #4e5662;
 }
 
-.form-input:hover {
+.login-form :deep(.p-inputtext:enabled:hover) {
   background: #ffffff;
   border-color: #000000;
 }
 
-.form-input:focus {
+.login-form :deep(.p-inputtext:enabled:focus) {
   border-color: #000000;
   background: #ffffff;
   box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.08);
 }
 
-.form-input:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
-}
-
-.error-box {
-  padding: 12px 14px;
-  border: 1px solid #fecaca;
-  border-radius: 10px;
-  background: #fef2f2;
-  color: #dc2626;
-  font-size: 14px;
-  line-height: 1.4;
-}
-
+/* Buton */
 .login-button {
   width: 100%;
   height: 52px;
   margin-top: 6px;
-  border: none;
   border-radius: 10px;
   background: #000000;
-  color: #ffffff;
+  border-color: #000000;
   font-size: 15px;
   font-weight: 800;
-  cursor: pointer;
   transition: 0.2s ease;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
 }
 
-.login-button:hover {
+.login-button:enabled:hover {
   background: #1f1f1f;
+  border-color: #1f1f1f;
   transform: translateY(-1px);
 }
 
-.login-button:active {
+.login-button:enabled:active {
   transform: translateY(0);
 }
-
-.login-button:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.loader {
-  width: 17px;
-  height: 17px;
-  border: 2px solid rgba(255, 255, 255, 0.45);
-  border-top-color: #ffffff;
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 </style>
