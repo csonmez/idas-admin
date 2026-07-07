@@ -8,8 +8,12 @@ const router = useRouter()
 const { login } = useAuth()
 
 const handleEmailBlur = () => {
-  if (email.value && !email.value.includes('@')) {
-    email.value = `${email.value}@erciyes.edu.tr`
+  const trimmedEmail = email.value.trim()
+
+  if (trimmedEmail && !trimmedEmail.includes('@')) {
+    email.value = `${trimmedEmail}@erciyes.edu.tr`
+  } else {
+    email.value = trimmedEmail
   }
 }
 
@@ -37,6 +41,7 @@ const handleSubmit = async () => {
   }
 }
 </script>
+
 <template>
   <form class="login-form" @submit.prevent="handleSubmit">
     <div v-if="error" class="error-box">
@@ -71,16 +76,18 @@ const handleSubmit = async () => {
     </div>
 
     <button type="submit" class="login-button" :disabled="isLoading">
-      {{ isLoading ? 'Giriş yapılıyor...' : 'Giriş Yap' }}
+      <span v-if="isLoading" class="loader"></span>
+      <span>{{ isLoading ? 'Giriş yapılıyor...' : 'Giriş Yap' }}</span>
     </button>
   </form>
 </template>
 
 <style scoped>
 .login-form {
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 20px;
 }
 
 .form-field {
@@ -90,32 +97,42 @@ const handleSubmit = async () => {
 }
 
 .form-field label {
-  color: #172554;
+  color: #111111;
   font-size: 14px;
   font-weight: 700;
 }
 
 .form-input {
   width: 100%;
-  height: 46px;
-  padding: 0 14px;
-  border: 1px solid #d1d5db;
+  height: 50px;
+  padding: 0 15px;
+  border: 1.5px solid #111111;
   border-radius: 10px;
-  background: #f9fafb;
-  color: #111827;
+  background: #f3f4f6;
+  color: #111111;
   font-size: 15px;
   outline: none;
   transition: 0.2s ease;
 }
 
 .form-input::placeholder {
-  color: #9ca3af;
+  color: #4e5662;
+}
+
+.form-input:hover {
+  background: #ffffff;
+  border-color: #000000;
 }
 
 .form-input:focus {
-  border-color: #2563eb;
+  border-color: #000000;
   background: #ffffff;
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.08);
+}
+
+.form-input:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 .error-box {
@@ -130,24 +147,51 @@ const handleSubmit = async () => {
 
 .login-button {
   width: 100%;
-  height: 46px;
-  margin-top: 4px;
+  height: 52px;
+  margin-top: 6px;
   border: none;
   border-radius: 10px;
-  background: #172554;
-  color: white;
+  background: #000000;
+  color: #ffffff;
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
   transition: 0.2s ease;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 }
 
 .login-button:hover {
-  background: #1d4ed8;
+  background: #1f1f1f;
+  transform: translateY(-1px);
+}
+
+.login-button:active {
+  transform: translateY(0);
 }
 
 .login-button:disabled {
-  opacity: 0.7;
+  opacity: 0.65;
   cursor: not-allowed;
+  transform: none;
 }
+
+.loader {
+  width: 17px;
+  height: 17px;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 </style>
