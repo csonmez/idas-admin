@@ -19,6 +19,12 @@ const handleEmailBlur = () => {
 
 const handleSubmit = async () => {
   error.value = ''
+
+  if (!email.value || !password.value) {
+    error.value = 'Lütfen e-posta ve parola alanlarını doldurunuz.'
+    return
+  }
+
   isLoading.value = true
 
   try {
@@ -50,6 +56,7 @@ const handleSubmit = async () => {
 
     <div class="form-field">
       <label for="email">E-posta</label>
+
       <InputText
         id="email"
         v-model="email"
@@ -64,6 +71,7 @@ const handleSubmit = async () => {
 
     <div class="form-field">
       <label for="password">Parola</label>
+
       <Password
         id="password"
         v-model="password"
@@ -78,9 +86,9 @@ const handleSubmit = async () => {
 
     <Button
       type="submit"
-      class="login-button"
       :label="isLoading ? 'Giriş yapılıyor...' : 'Giriş Yap'"
       :loading="isLoading"
+      fluid
     />
   </form>
 </template>
@@ -100,58 +108,15 @@ const handleSubmit = async () => {
 }
 
 .form-field label {
-  color: #111111;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
-
-.login-form :deep(.p-inputtext) {
-  height: 50px;
-  padding: 0 15px;
-  border: 1.5px solid #111111;
-  border-radius: 10px;
-  background: #f3f4f6;
-  color: #111111;
-  font-size: 15px;
-  transition: 0.2s ease;
-}
-
-.login-form :deep(.p-inputtext::placeholder) {
-  color: #4e5662;
-}
-
-.login-form :deep(.p-inputtext:enabled:hover) {
-  background: #ffffff;
-  border-color: #000000;
-}
-
-.login-form :deep(.p-inputtext:enabled:focus) {
-  border-color: #000000;
-  background: #ffffff;
-  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.08);
-}
-
-/* Buton */
-.login-button {
+.login-form :deep(.p-password) {
   width: 100%;
-  height: 52px;
-  margin-top: 6px;
-  border-radius: 10px;
-  background: #000000;
-  border-color: #000000;
-  font-size: 15px;
-  font-weight: 800;
-  transition: 0.2s ease;
 }
 
-.login-button:enabled:hover {
-  background: #1f1f1f;
-  border-color: #1f1f1f;
-  transform: translateY(-1px);
-}
-
-.login-button:enabled:active {
-  transform: translateY(0);
+.login-form :deep(.p-password-input) {
+  width: 100%;
 }
 </style>

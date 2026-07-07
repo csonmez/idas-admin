@@ -49,7 +49,6 @@
   height: 100vh;
   display: grid;
   grid-template-columns: 1.08fr 1fr;
-  background: #f5f5f5;
   overflow: hidden;
   position: relative;
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -83,16 +82,12 @@
   align-items: center;
   justify-content: center;
   padding: 42px;
-  background: #f7f7f7;
 }
-
 
 .login-card {
   width: 100%;
   max-width: 440px;
   border-radius: 18px;
-  background: #ffffff;
-  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.12);
 }
 
 .login-card :deep(.p-card-body) {
@@ -142,12 +137,11 @@
 .logo-divider {
   width: 1px;
   height: 34px;
-  background: #d4d4d4;
+  background: var(--p-surface-300);
 }
 
 .card-header h1 {
   margin: 0;
-  color: #111111;
   font-size: 28px;
   font-weight: 800;
   letter-spacing: -0.03em;
@@ -155,15 +149,14 @@
 
 .card-header p {
   margin: 8px 0 0;
-  color: #555555;
   font-size: 15px;
   font-weight: 500;
 }
+
 @media (max-width: 1000px) {
   .login-page {
     grid-template-columns: 1fr;
   }
-
 
   .image-side {
     display: block;
@@ -180,10 +173,7 @@
     position: relative;
     z-index: 1;
     padding: 28px;
-    background: transparent;  
+    background: transparent;
   }
-
- 
 }
-
 </style>
