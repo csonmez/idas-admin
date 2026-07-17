@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>YÖK Araştırma Üniversiteleri Performans Haritası 2020–2024</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#f0f4f8;min-height:auto;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Open Sans',sans-serif}
+#gw{background:#fff;font-family:'Open Sans',sans-serif;padding:28px 26px 20px;border:1px solid #cddde8;border-radius:8px;width:100%;max-width:960px;box-shadow:0 4px 24px rgba(0,40,80,0.08)}
+#gh{margin-bottom:16px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap}
+#gtitle{font-size:19px;font-weight:700;color:#1a3a52;letter-spacing:-0.3px;line-height:1.3}
+#gtitle span{font-weight:300;font-size:15px;color:#6a8fa8}
+#gsrc{font-size:10px;color:#8ab0c8;text-align:right;line-height:1.7}
+#gchartbox{position:relative;width:100%;background:#fcfeff}
+svg#gs{display:block;width:100%}
+.blab{font-family:'Open Sans',sans-serif;pointer-events:none}
+#gctrl{display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap}
+#gpbtn{width:36px;height:36px;border-radius:50%;border:2px solid #3a7ab8;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
+#gpbtn:hover{background:#e6f2fb}
+#gpbtn svg{width:12px;height:12px;fill:#3a7ab8}
+#gtlwrap{flex:1;min-width:200px}
+#gtl{height:5px;background:#ddeef7;border-radius:3px;cursor:pointer;position:relative}
+#gtlf{height:100%;background:#3a7ab8;border-radius:3px;width:0%;transition:width .06s}
+.gticks{display:flex;justify-content:space-between;margin-top:6px}
+.gtick{font-size:11px;color:#8ab0c8;cursor:pointer;padding:2px 5px;border-radius:4px;user-select:none;font-family:'Open Sans',sans-serif;transition:color .15s}
+.gtick.on{color:#1a3a52;font-weight:700}
+.gtick:hover{color:#3a7ab8}
+#gleg{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;font-size:11px;color:#6a8fa8;align-items:center}
+.gli{display:flex;align-items:center;gap:6px}
+.glc{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+#gszleg{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:10.5px;color:#8ab0c8}
+.gszc{border-radius:50%;border:1.5px solid #aac8dc;background:rgba(58,122,184,0.10)}
+#gtt{position:absolute;background:#fff;border:1px solid #b8d4e8;border-radius:8px;padding:11px 15px;font-size:11.5px;line-height:1.9;pointer-events:none;display:none;z-index:99;color:#3a6070;min-width:170px;box-shadow:0 4px 16px rgba(0,50,90,0.12)}
+#gtt strong{color:#1a3a52;font-size:13px;display:block;margin-bottom:1px}
+#gtt .tc{font-size:9.5px;color:#8ab0c8;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;display:block}
+.tr2{display:flex;justify-content:space-between;gap:18px}
+.tv2{color:#1a6aaa;font-weight:700}
+</style>
+</head>
+<body>
+<div id="gw">
+  <div id="gh">
+    <div>
+      <div id="gtitle">YÖK Araştırma Üniversiteleri Performans Haritası <span id="gyrdisp">2020</span></div>
+      <div style="font-size:10.5px;color:#8ab0c8;margin-top:4px">x: Araştırma Kapasitesi &nbsp;·&nbsp; y: Araştırma Kalitesi &nbsp;·&nbsp; boyut: Araştırma İşbirliği puanı</div>
+    </div>
+    <div id="gsrc">YÖK Araştırma Üniversitesi<br>Performans İzleme Endeksi<br>2020 – 2024</div>
+  </div>
+  <div id="gchartbox">
+    <svg id="gs" role="img" aria-label="YÖK araştırma üniversiteleri Gapminder tarzı bubble chart 2020-2024"></svg>
+    <div id="gtt"></div>
+  </div>
+  <div id="gctrl">
+    <button id="gpbtn" onclick="gPlay()" title="Oynat / Duraklat">
+      <svg viewBox="0 0 12 12"><path id="gppath" d="M2 1.5l9 4.5-9 4.5z"/></svg>
+    </button>
+    <div id="gtlwrap">
+      <div id="gtl" onclick="gSeek(event)"><div id="gtlf"></div></div>
+      <div class="gticks">
+        <span class="gtick on" onclick="gJump(0)">2020</span>
+        <span class="gtick"    onclick="gJump(1)">2021</span>
+        <span class="gtick"    onclick="gJump(2)">2022</span>
+        <span class="gtick"    onclick="gJump(3)">2023</span>
+        <span class="gtick"    onclick="gJump(4)">2024</span>
+      </div>
+    </div>
+  </div>
+  <div id="gleg">
+    <div class="gli"><span class="glc" style="background:#2a6fc4;border:1.5px solid #1a50a0"></span>A1 — Üst Düzey Araştırma</div>
+    <div class="gli"><span class="glc" style="background:#20a870;border:1.5px solid #108050"></span>A2 — Yüksek Düzey Araştırma</div>
+    <div class="gli"><span class="glc" style="background:#e0a018;border:1.5px solid #a87800"></span>A3 — Orta Düzey Araştırma</div>
+    <div class="gli"><span class="glc" style="background:#e85a28;border:2px solid #b03808;box-shadow:0 0 0 2px rgba(232,90,40,0.22)"></span>ERÜ — Erciyes Üniversitesi</div>
+    <div id="gszleg">
+      <span>işbirliği →</span>
+      <div style="display:flex;align-items:flex-end;gap:5px">
+        <div class="gszc" style="width:8px;height:8px"></div>
+        <div class="gszc" style="width:14px;height:14px"></div>
+        <div class="gszc" style="width:22px;height:22px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const NS='http://www.w3.org/2000/svg';
+const YEARS=[2020,2021,2022,2023,2024];
+
+const RAW={
+2020:[
+  {id:'ODTÜ',   s:'ODTÜ',      cat:'A1', x:21.39,y:35.86,r:28.15},
+  {id:'İTÜ',    s:'İTÜ',       cat:'A1', x:19.78,y:32.83,r:23.62},
+  {id:'BOÜN',   s:'Boğaziçi',  cat:'A1', x:14.59,y:27.50,r:28.24},
+  {id:'İYTE',   s:'İYTE',      cat:'A2', x:15.98,y:24.95,r:19.94},
+  {id:'YTÜ',    s:'YTÜ',       cat:'A2', x:16.20,y:23.33,r:14.58},
+  {id:'AÜ',     s:'Ankara',    cat:'A2', x:13.29,y:20.52,r:19.26},
+  {id:'İÜ',     s:'İÜ',        cat:'A2', x:15.03,y:16.29,r:18.74},
+  {id:'ERÜ',    s:'ERÜ',       cat:'A2', x:9.00, y:20.57,r:19.09,eru:true},
+  {id:'HÜ',     s:'Hacettepe', cat:'A2', x:15.89,y:20.91,r:11.69},
+  {id:'GTÜ',    s:'GTÜ',       cat:'A2', x:13.98,y:16.05,r:14.03},
+  {id:'EÜ',     s:'Ege',       cat:'A2', x:14.58,y:14.94,r:9.32},
+  {id:'İÜC',    s:'İÜC',       cat:'A2', x:11.81,y:5.63, r:19.91},
+  {id:'MÜ',     s:'Marmara',   cat:'A3', x:7.13, y:11.10,r:14.50},
+  {id:'BUÜ',    s:'BUÜ',       cat:'A3', x:5.42, y:13.09,r:13.76},
+  {id:'DEÜ',    s:'DEÜ',       cat:'A3', x:7.22, y:9.77, r:11.82},
+  {id:'ATAÜNİ', s:'Atatürk',   cat:'A3', x:4.27, y:14.94,r:8.82},
+  {id:'GÜ',     s:'Gazi',      cat:'A3', x:11.40,y:10.49,r:6.07},
+  {id:'ÇÜ',     s:'Çukurova',  cat:'A3', x:6.24, y:9.91, r:11.49},
+  {id:'FÜ',     s:'Fırat',     cat:'A3', x:1.87, y:12.21,r:9.10},
+  {id:'KTÜ',    s:'KTÜ',       cat:'A3', x:3.99, y:9.09, r:7.15},
+],
+2021:[
+  {id:'ODTÜ',   s:'ODTÜ',      cat:'A1', x:32.57,y:36.54,r:16.76},
+  {id:'KÜ',     s:'Koç',       cat:'A1', x:19.97,y:34.63,r:15.45},
+  {id:'SÜ',     s:'Sabancı',   cat:'A1', x:15.59,y:37.15,r:16.29},
+  {id:'İTÜ',    s:'İTÜ',       cat:'A1', x:27.75,y:27.18,r:13.70},
+  {id:'Bilkent',s:'Bilkent',   cat:'A1', x:23.93,y:27.61,r:14.79},
+  {id:'BOÜN',   s:'Boğaziçi',  cat:'A2', x:21.29,y:28.82,r:13.14},
+  {id:'İYTE',   s:'İYTE',      cat:'A2', x:25.61,y:19.14,r:13.19},
+  {id:'İÜ',     s:'İÜ',        cat:'A2', x:21.54,y:23.70,r:9.48},
+  {id:'YTÜ',    s:'YTÜ',       cat:'A2', x:23.45,y:18.06,r:9.36},
+  {id:'HÜ',     s:'Hacettepe', cat:'A2', x:21.04,y:22.59,r:6.63},
+  {id:'GTÜ',    s:'GTÜ',       cat:'A2', x:20.35,y:19.69,r:10.10},
+  {id:'AÜ',     s:'Ankara',    cat:'A2', x:17.60,y:18.10,r:9.47},
+  {id:'EÜ',     s:'Ege',       cat:'A2', x:20.76,y:14.42,r:9.88},
+  {id:'ERÜ',    s:'ERÜ',       cat:'A2', x:15.45,y:21.36,r:8.04,eru:true},
+  {id:'İÜC',    s:'İÜC',       cat:'A2', x:20.88,y:13.53,r:9.06},
+  {id:'GÜ',     s:'Gazi',      cat:'A2', x:19.88,y:15.06,r:6.12},
+  {id:'FÜ',     s:'Fırat',     cat:'A2', x:10.08,y:20.37,r:6.28},
+  {id:'MÜ',     s:'Marmara',   cat:'A3', x:11.42,y:13.35,r:8.26},
+  {id:'DEÜ',    s:'DEÜ',       cat:'A3', x:11.98,y:14.11,r:6.00},
+  {id:'ATAÜNİ', s:'Atatürk',   cat:'A3', x:12.55,y:13.68,r:4.32},
+  {id:'ÇÜ',     s:'Çukurova',  cat:'A3', x:13.91,y:9.47, r:5.41},
+  {id:'KTÜ',    s:'KTÜ',       cat:'A3', x:11.62,y:12.11,r:4.82},
+  {id:'BUÜ',    s:'BUÜ',       cat:'A3', x:7.66, y:10.01,r:8.53},
+],
+2022:[
+  {id:'ODTÜ',   s:'ODTÜ',      cat:'A1', x:33.87,y:30.62,r:17.78},
+  {id:'KÜ',     s:'Koç',       cat:'A1', x:26.18,y:32.00,r:17.63},
+  {id:'SÜ',     s:'Sabancı',   cat:'A1', x:22.33,y:34.74,r:17.42},
+  {id:'İTÜ',    s:'İTÜ',       cat:'A1', x:31.04,y:28.29,r:14.80},
+  {id:'Bilkent',s:'Bilkent',   cat:'A1', x:24.89,y:28.36,r:14.60},
+  {id:'BOÜN',   s:'Boğaziçi',  cat:'A2', x:20.87,y:28.62,r:12.44},
+  {id:'İYTE',   s:'İYTE',      cat:'A2', x:25.23,y:19.64,r:14.40},
+  {id:'YTÜ',    s:'YTÜ',       cat:'A2', x:25.38,y:19.58,r:11.64},
+  {id:'İÜ',     s:'İÜ',        cat:'A2', x:24.42,y:21.51,r:7.86},
+  {id:'HÜ',     s:'Hacettepe', cat:'A2', x:23.83,y:19.14,r:7.71},
+  {id:'ERÜ',    s:'ERÜ',       cat:'A2', x:17.79,y:22.33,r:9.49,eru:true},
+  {id:'GTÜ',    s:'GTÜ',       cat:'A2', x:17.40,y:19.06,r:12.27},
+  {id:'AÜ',     s:'Ankara',    cat:'A2', x:20.10,y:17.31,r:10.87},
+  {id:'İÜC',    s:'İÜC',       cat:'A2', x:22.32,y:12.24,r:9.25},
+  {id:'EÜ',     s:'Ege',       cat:'A2', x:20.96,y:11.92,r:8.95},
+  {id:'GÜ',     s:'Gazi',      cat:'A2', x:20.61,y:11.76,r:7.70},
+  {id:'ATAÜNİ', s:'Atatürk',   cat:'A2', x:14.78,y:19.76,r:4.46},
+  {id:'FÜ',     s:'Fırat',     cat:'A3', x:13.66,y:19.32,r:5.55},
+  {id:'MÜ',     s:'Marmara',   cat:'A3', x:13.95,y:11.38,r:9.11},
+  {id:'ÇÜ',     s:'Çukurova',  cat:'A3', x:14.22,y:11.46,r:7.22},
+  {id:'DEÜ',    s:'DEÜ',       cat:'A3', x:12.73,y:11.08,r:7.74},
+  {id:'KTÜ',    s:'KTÜ',       cat:'A3', x:11.96,y:12.46,r:4.44},
+  {id:'BUÜ',    s:'BUÜ',       cat:'A3', x:7.86, y:10.23,r:9.90},
+],
+2023:[
+  {id:'KÜ',     s:'Koç',       cat:'A1', x:27,y:33,r:14},
+  {id:'ODTÜ',   s:'ODTÜ',      cat:'A1', x:31,y:27,r:15},
+  {id:'SÜ',     s:'Sabancı',   cat:'A1', x:24,y:33,r:16},
+  {id:'İTÜ',    s:'İTÜ',       cat:'A1', x:31,y:30,r:11},
+  {id:'BOÜN',   s:'Boğaziçi',  cat:'A1', x:24,y:33,r:14},
+  {id:'Bilkent',s:'Bilkent',   cat:'A2', x:23,y:29,r:12},
+  {id:'YTÜ',    s:'YTÜ',       cat:'A2', x:27,y:25,r:10},
+  {id:'İYTE',   s:'İYTE',      cat:'A2', x:25,y:22,r:13},
+  {id:'AÜ',     s:'Ankara',    cat:'A2', x:26,y:19,r:12},
+  {id:'HÜ',     s:'Hacettepe', cat:'A2', x:24,y:23,r:7},
+  {id:'ERÜ',    s:'ERÜ',       cat:'A2', x:22,y:21,r:10,eru:true},
+  {id:'İÜ',     s:'İÜ',        cat:'A2', x:24,y:19,r:9},
+  {id:'EÜ',     s:'Ege',       cat:'A2', x:25,y:15,r:10},
+  {id:'İÜC',    s:'İÜC',       cat:'A2', x:24,y:14,r:10},
+  {id:'GÜ',     s:'Gazi',      cat:'A2', x:25,y:14,r:7},
+  {id:'GTÜ',    s:'GTÜ',       cat:'A2', x:18,y:16,r:11},
+  {id:'ATAÜNİ', s:'Atatürk',   cat:'A2', x:17,y:21,r:6},
+  {id:'MÜ',     s:'Marmara',   cat:'A3', x:16,y:16,r:10},
+  {id:'ÇÜ',     s:'Çukurova',  cat:'A3', x:17,y:13,r:8},
+  {id:'FÜ',     s:'Fırat',     cat:'A3', x:17,y:16,r:5},
+  {id:'DEÜ',    s:'DEÜ',       cat:'A3', x:20,y:9, r:6},
+  {id:'BUÜ',    s:'BUÜ',       cat:'A3', x:12,y:11,r:8},
+  {id:'KTÜ',    s:'KTÜ',       cat:'A3', x:15,y:10,r:5},
+],
+2024:[
+  {id:'KÜ',     s:'Koç',       cat:'A1', x:31.61,y:28.94,r:13.81},
+  {id:'SÜ',     s:'Sabancı',   cat:'A1', x:31.85,y:27.25,r:14.84},
+  {id:'ODTÜ',   s:'ODTÜ',      cat:'A1', x:30.29,y:26.91,r:16.12},
+  {id:'İTÜ',    s:'İTÜ',       cat:'A1', x:28.96,y:27.53,r:12.51},
+  {id:'BOÜN',   s:'Boğaziçi',  cat:'A1', x:27.19,y:25.88,r:14.60},
+  {id:'YTÜ',    s:'YTÜ',       cat:'A2', x:29.08,y:23.69,r:11.99},
+  {id:'Bilkent',s:'Bilkent',   cat:'A2', x:25.79,y:26.46,r:12.31},
+  {id:'HÜ',     s:'Hacettepe', cat:'A2', x:25.89,y:26.02,r:11.20},
+  {id:'İYTE',   s:'İYTE',      cat:'A2', x:29.73,y:19.91,r:13.40},
+  {id:'AÜ',     s:'Ankara',    cat:'A2', x:24.37,y:24.80,r:11.85},
+  {id:'İÜ',     s:'İÜ',        cat:'A2', x:23.23,y:25.07,r:11.31},
+  {id:'EÜ',     s:'Ege',       cat:'A2', x:25.19,y:23.02,r:11.08},
+  {id:'GÜ',     s:'Gazi',      cat:'A2', x:25.05,y:23.44,r:10.71},
+  {id:'ERÜ',    s:'ERÜ',       cat:'A2', x:24.03,y:23.15,r:11.54,eru:true},
+  {id:'SAÜ',    s:'Sakarya',   cat:'A2', x:20.89,y:26.36,r:11.02},
+  {id:'ATAÜNİ', s:'Atatürk',   cat:'A2', x:22.51,y:24.62,r:11.00},
+  {id:'İÜC',    s:'İÜC',       cat:'A2', x:24.56,y:22.38,r:10.38},
+  {id:'MÜ',     s:'Marmara',   cat:'A3', x:21.10,y:22.71,r:11.20},
+  {id:'GTÜ',    s:'GTÜ',       cat:'A3', x:23.24,y:19.52,r:11.94},
+  {id:'ÇÜ',     s:'Çukurova',  cat:'A3', x:21.86,y:21.83,r:10.38},
+  {id:'FÜ',     s:'Fırat',     cat:'A3', x:21.97,y:21.27,r:9.99},
+  {id:'KTÜ',    s:'KTÜ',       cat:'A3', x:21.65,y:20.58,r:10.06},
+  {id:'BUÜ',    s:'BUÜ',       cat:'A3', x:20.79,y:19.61,r:10.80},
+]
+};
+
+const FULLNAMES={
+  'ODTÜ':'Orta Doğu Teknik Üniversitesi','İTÜ':'İstanbul Teknik Üniversitesi',
+  'BOÜN':'Boğaziçi Üniversitesi','İYTE':'İzmir Yüksek Teknoloji Enstitüsü',
+  'YTÜ':'Yıldız Teknik Üniversitesi','AÜ':'Ankara Üniversitesi',
+  'İÜ':'İstanbul Üniversitesi','ERÜ':'Erciyes Üniversitesi',
+  'HÜ':'Hacettepe Üniversitesi','GTÜ':'Gebze Teknik Üniversitesi',
+  'EÜ':'Ege Üniversitesi','İÜC':'İstanbul Üniversitesi-Cerrahpaşa',
+  'MÜ':'Marmara Üniversitesi','BUÜ':'Bursa Uludağ Üniversitesi',
+  'DEÜ':'Dokuz Eylül Üniversitesi','ATAÜNİ':'Atatürk Üniversitesi',
+  'GÜ':'Gazi Üniversitesi','ÇÜ':'Çukurova Üniversitesi',
+  'FÜ':'Fırat Üniversitesi','KTÜ':'Karadeniz Teknik Üniversitesi',
+  'KÜ':'Koç Üniversitesi','SÜ':'Sabancı Üniversitesi',
+  'Bilkent':'İhsan Doğramacı Bilkent Üniversitesi','SAÜ':'Sakarya Üniversitesi'
+};
+
+const COLS={
+  A1:{fill:'rgba(42,111,196,0.70)',stroke:'#1a50a0',lbl:'#0e3878'},
+  A2:{fill:'rgba(32,168,112,0.68)',stroke:'#108050',lbl:'#065038'},
+  ERU:{fill:'rgba(232,90,40,0.84)',stroke:'#b03808',lbl:'#7a2000'},
+  A3:{fill:'rgba(224,160,24,0.70)',stroke:'#a87800',lbl:'#6a4800'},
+};
+
+const PAD={t:32,r:28,b:54,l:54};
+let W,H,svg;
+let xMn=999,xMx=0,yMn=999,yMx=0;
+YEARS.forEach(yr=>RAW[yr].forEach(d=>{
+  xMn=Math.min(xMn,d.x);xMx=Math.max(xMx,d.x);
+  yMn=Math.min(yMn,d.y);yMx=Math.max(yMx,d.y);
+}));
+xMn=Math.max(0,Math.floor(xMn)-1);xMx=Math.ceil(xMx)+1;
+yMn=Math.max(0,Math.floor(yMn)-1);yMx=Math.ceil(yMx)+1;
+
+function xp(v){return PAD.l+(v-xMn)/(xMx-xMn)*(W-PAD.l-PAD.r)}
+function yp(v){return H-PAD.b-(v-yMn)/(yMx-yMn)*(H-PAD.t-PAD.b)}
+function rs(r){const mn=4,mx=29,t=Math.max(0,Math.min(1,(r-mn)/(mx-mn)));return 5+Math.sqrt(t)*27;}
+function lfs(pxr){return Math.max(9,Math.min(15,Math.round(pxr*0.70+5.5)))}
+function lerp(a,b,t){return a+(b-a)*t}
+function ease(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2}
+function mk(tag,a={}){const e=document.createElementNS(NS,tag);Object.entries(a).forEach(([k,v])=>e.setAttribute(k,v));return e;}
+
+function init(){
+  const wrap=document.getElementById('gchartbox');
+  W=wrap.offsetWidth||900; H=Math.round(W*0.60);
+  svg=document.getElementById('gs');
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.setAttribute('height',H);
+  svg.innerHTML='';
+
+  /* defs: drop-shadow filter */
+  const defs=mk('defs');
+  const f=mk('filter',{id:'bs',x:'-30%',y:'-30%',width:'160%',height:'160%'});
+  f.appendChild(mk('feDropShadow',{dx:'0',dy:'1.5','flood-color':'rgba(0,40,80,0.10)','stdDeviation':'2.5'}));
+  defs.appendChild(f); svg.appendChild(defs);
+
+  /* watermark year — redrawn each frame by frameV */
+  const wmfs=Math.round(H*0.30);
+  const wm=mk('text',{id:'gwm',x:W-PAD.r-4,y:H-PAD.b-2,
+    'text-anchor':'end','dominant-baseline':'auto',
+    'font-size':wmfs,'font-weight':'700',
+    'font-family':"'Open Sans',sans-serif",fill:'rgba(26,80,150,0.055)'});
+  wm.textContent='2020'; svg.appendChild(wm);
+
+  /* grid + bubble layers — frameV fills these */
+  svg.appendChild(mk('g',{id:'gg'}));
+  svg.appendChild(mk('g',{id:'gb'}));
+  svg.appendChild(mk('g',{id:'gl'}));
+}
+
+/* frame() replaced by frameV() which uses live viewport */
+
+function showTip(ev,p,yr){
+  const tip=document.getElementById('gtt');
+  const box=document.getElementById('gchartbox');
+  const br=box.getBoundingClientRect();
+  const full=FULLNAMES[p.id]||p.s;
+  const cat=p.eru?'Erciyes Üniversitesi (A2)':p.cat+' kategorisi';
+  const total=(p.cx+p.cy+p.rv).toFixed(2);
+  tip.innerHTML=`<strong>${full}</strong><span class="tc">${cat} · ${yr}</span>
+    <div class="tr2"><span>Araştırma Kapasitesi</span><span class="tv2">${p.cx.toFixed(2)}</span></div>
+    <div class="tr2"><span>Araştırma Kalitesi</span><span class="tv2">${p.cy.toFixed(2)}</span></div>
+    <div class="tr2"><span>Araştırma İşbirliği</span><span class="tv2">${p.rv.toFixed(2)}</span></div>
+    <div class="tr2" style="border-top:1px solid #e0ecf5;margin-top:4px;padding-top:4px"><span>Toplam Puan</span><span class="tv2">${total}</span></div>`;
+  tip.style.display='block';
+  let lft=ev.clientX-br.left+14,top2=ev.clientY-br.top-10;
+  if(lft+180>W-4) lft=ev.clientX-br.left-190;
+  if(top2+150>H-4) top2=ev.clientY-br.top-155;
+  tip.style.left=lft+'px'; tip.style.top=top2+'px';
+}
+
+let idx=0,playing=false,af=null,as2=null;
+const DUR=1900;
+
+/* ── ZOOM STATE ─────────────────────────────────────
+   Normal view : xMn/xMx/yMn/yMx (global, computed once)
+   Zoomed view : fixed 15–38 window to spread 2024 cluster
+   Zoom animates smoothly after 2024 frame completes.
+*/
+const ZOOM_XMN=15, ZOOM_XMX=37, ZOOM_YMN=17, ZOOM_YMX=40;
+let curXMn,curXMx,curYMn,curYMx; // live viewport
+let zoomed=false, zoomAF=null, zoomStart=null;
+const ZOOM_DUR=1000;
+
+function applyViewport(vxMn,vxMx,vyMn,vyMx){
+  curXMn=vxMn; curXMx=vxMx; curYMn=vyMn; curYMx=vyMx;
+}
+
+function xpV(v){return PAD.l+(v-curXMn)/(curXMx-curXMn)*(W-PAD.l-PAD.r)}
+function ypV(v){return H-PAD.b-(v-curYMn)/(curYMx-curYMn)*(H-PAD.t-PAD.b)}
+
+/* override xp/yp to use live viewport */
+/* (redefine frame to use xpV/ypV) */
+
+function frameV(fy,ty,t){
+  document.getElementById('gwm').textContent=ty;
+  document.getElementById('gyrdisp').textContent=ty;
+  const fromMap={},toMap={};
+  RAW[fy].forEach(d=>fromMap[d.id]=d);
+  RAW[ty].forEach(d=>toMap[d.id]=d);
+  const allIds=[...new Set([...Object.keys(fromMap),...Object.keys(toMap)])];
+  const pts=allIds.map(id=>{
+    const f=fromMap[id]||toMap[id];
+    const to=toMap[id]||fromMap[id];
+    const base=toMap[id]||fromMap[id];
+    const alpha=toMap[id]?(fromMap[id]?1:ease(t)):ease(1-t);
+    return{...base,id,cx:lerp(f.x,to.x,t),cy:lerp(f.y,to.y,t),rv:lerp(f.r,to.r,t),alpha};
+  }).sort((a,b)=>b.rv-a.rv);
+
+  /* redraw grid for current viewport */
+  const gg=document.getElementById('gg');
+  gg.innerHTML='';
+  const xStep=curXMx-curXMn<=25?2:5, yStep=curYMx-curYMn<=25?2:5;
+  for(let v=Math.ceil(curXMn/xStep)*xStep;v<=curXMx;v+=xStep){
+    const lx=xpV(v);
+    gg.appendChild(mk('line',{x1:lx,x2:lx,y1:ypV(curYMn),y2:ypV(curYMx),stroke:'#d2e8f4','stroke-width':'1'}));
+    const tx=mk('text',{x:lx,y:H-PAD.b+18,'text-anchor':'middle',fill:'#8ab0c8','font-size':'11','font-family':"'Open Sans',sans-serif"});
+    tx.textContent=v; gg.appendChild(tx);
+  }
+  for(let v=Math.ceil(curYMn/yStep)*yStep;v<=curYMx;v+=yStep){
+    const ly=ypV(v);
+    gg.appendChild(mk('line',{x1:xpV(curXMn),x2:xpV(curXMx),y1:ly,y2:ly,stroke:'#d2e8f4','stroke-width':'1'}));
+    const ty=mk('text',{x:PAD.l-9,y:ly,'text-anchor':'end','dominant-baseline':'middle',fill:'#8ab0c8','font-size':'11','font-family':"'Open Sans',sans-serif"});
+    ty.textContent=v; gg.appendChild(ty);
+  }
+  gg.appendChild(mk('line',{x1:xpV(curXMn),x2:xpV(curXMx),y1:ypV(curYMn),y2:ypV(curYMn),stroke:'#a8cade','stroke-width':'1.5'}));
+  gg.appendChild(mk('line',{x1:xpV(curXMn),x2:xpV(curXMn),y1:ypV(curYMn),y2:ypV(curYMx),stroke:'#a8cade','stroke-width':'1.5'}));
+
+  const bgfx=Math.round(W*0.038),bgfy=Math.round(H*0.050);
+  const agx=mk('text',{fill:'rgba(26,90,180,0.060)','font-family':"'Open Sans',sans-serif",'font-weight':'700','font-size':bgfx,x:(PAD.l+W-PAD.r)/2,y:H-PAD.b-8,'text-anchor':'middle'});
+  agx.textContent='KAPASİTE'; gg.appendChild(agx);
+  const agy=mk('text',{fill:'rgba(26,90,180,0.060)','font-family':"'Open Sans',sans-serif",'font-weight':'700','font-size':bgfy,transform:'rotate(-90)',x:-((PAD.t+H-PAD.b)/2),y:13,'text-anchor':'middle'});
+  agy.textContent='KALİTE'; gg.appendChild(agy);
+  const at1=mk('text',{fill:'#6a8fa8','font-family':"'Open Sans',sans-serif",'font-weight':'600','font-size':'12',x:(PAD.l+W-PAD.r)/2,y:H-6,'text-anchor':'middle'});
+  at1.textContent='Araştırma Kapasitesi →'; gg.appendChild(at1);
+  const at2=mk('text',{fill:'#6a8fa8','font-family':"'Open Sans',sans-serif",'font-weight':'600','font-size':'12',transform:'rotate(-90)',x:-((PAD.t+H-PAD.b)/2),y:12,'text-anchor':'middle'});
+  at2.textContent='↑ Araştırma Kalitesi'; gg.appendChild(at2);
+
+  /* zoom badge */
+  if(zoomed){
+    const zb=mk('text',{x:xpV(curXMx)-4,y:ypV(curYMx)+20,
+      'text-anchor':'end','font-size':'11','font-weight':'600',
+      'font-family':"'Open Sans',sans-serif",fill:'rgba(58,122,184,0.55)'});
+    zb.textContent='🔍 2024 yakın görünüm'; gg.appendChild(zb);
+  }
+
+  const gb=document.getElementById('gb'),gl=document.getElementById('gl');
+  gb.innerHTML=''; gl.innerHTML='';
+
+  pts.forEach(p=>{
+    if(p.alpha<0.05) return;
+    /* clip points outside viewport */
+    if(p.cx<curXMn-2||p.cx>curXMx+2||p.cy<curYMn-2||p.cy>curYMx+2) return;
+    const cx=xpV(p.cx),cy=ypV(p.cy),r=rs(p.rv);
+    const hue=p.eru?'ERU':p.cat;
+    const col=COLS[hue];
+
+    if(p.eru){
+      gb.appendChild(mk('circle',{cx,cy,r:r+9,fill:'none',stroke:'rgba(232,90,40,0.14)','stroke-width':'12',opacity:p.alpha}));
+      gb.appendChild(mk('circle',{cx,cy,r:r+3,fill:'none',stroke:'rgba(232,90,40,0.50)','stroke-width':'1.2',opacity:p.alpha}));
+    }
+    const c=mk('circle',{cx,cy,r,fill:col.fill,stroke:col.stroke,'stroke-width':p.eru?'1.8':'1',filter:'url(#bs)',opacity:p.alpha});
+    c.style.cursor='pointer';
+    c.addEventListener('mouseenter',ev=>{c.setAttribute('stroke-width','2.8');showTip(ev,p,ty);});
+    c.addEventListener('mouseleave',()=>{c.setAttribute('stroke-width',p.eru?'1.8':'1');document.getElementById('gtt').style.display='none';});
+    c.addEventListener('mousemove',ev=>showTip(ev,p,ty));
+    gb.appendChild(c);
+
+    const fs=lfs(r),fw=r>=18?'700':r>=13?'600':'400',lbl=p.s;
+    let lx=cx,ly=cy-r-5,anchor='middle';
+    if(ly-fs<ypV(curYMx)+4) ly=cy+r+fs+4;
+    const approxW=lbl.length*fs*0.54;
+    if(lx-approxW/2<PAD.l+2) anchor='start';
+    if(lx+approxW/2>W-PAD.r-2) anchor='end';
+    const lineY2=ly>cy?cy+r:cy-r;
+    gl.appendChild(mk('line',{x1:cx,y1:ly+(ly>cy?-2:2),x2:cx,y2:lineY2+(ly>cy?3:-3),
+      stroke:col.lbl,'stroke-width':'0.7','stroke-dasharray':'2 2',opacity:p.alpha*0.40}));
+    const txt=mk('text',{x:lx,y:ly,'text-anchor':anchor,'dominant-baseline':'auto',
+      class:'blab','font-size':fs,'font-weight':fw,fill:col.lbl,opacity:p.alpha});
+    txt.textContent=lbl; gl.appendChild(txt);
+  });
+}
+
+function animateZoom(fromXMn,fromXMx,fromYMn,fromYMx,toXMn,toXMx,toYMn,toYMx,onDone){
+  if(zoomAF){cancelAnimationFrame(zoomAF);zoomAF=null;}
+  zoomStart=null;
+  function step(ts){
+    if(!zoomStart) zoomStart=ts;
+    const raw=Math.min((ts-zoomStart)/ZOOM_DUR,1);
+    const t=ease(raw);
+    applyViewport(
+      lerp(fromXMn,toXMn,t), lerp(fromXMx,toXMx,t),
+      lerp(fromYMn,toYMn,t), lerp(fromYMx,toYMx,t)
+    );
+    frameV(2024,2024,1);
+    if(raw<1){ zoomAF=requestAnimationFrame(step); }
+    else { if(onDone) onDone(); }
+  }
+  zoomAF=requestAnimationFrame(step);
+}
+
+function setIdx(i,t=1){
+  const fy=i===0?YEARS[0]:YEARS[i-1];
+  applyViewport(xMn,xMx,yMn,yMx);
+  zoomed=false;
+  frameV(fy,YEARS[i],t);
+  document.getElementById('gtlf').style.width=((i/(YEARS.length-1))*100)+'%';
+  document.querySelectorAll('.gtick').forEach((e,j)=>e.classList.toggle('on',j===i));
+}
+
+function gJump(i){
+  stop2();
+  if(zoomAF){cancelAnimationFrame(zoomAF);zoomAF=null;}
+  zoomed=false;
+  applyViewport(xMn,xMx,yMn,yMx);
+  idx=i; setIdx(i,1);
+}
+
+function gSeek(ev){
+  const tl=document.getElementById('gtl');
+  const br=tl.getBoundingClientRect();
+  const t=Math.max(0,Math.min(1,(ev.clientX-br.left)/br.width));
+  const raw=t*(YEARS.length-1);
+  const i=Math.min(Math.floor(raw),YEARS.length-2);
+  const frac=raw-i;
+  stop2();
+  if(zoomAF){cancelAnimationFrame(zoomAF);zoomAF=null;}
+  zoomed=false;
+  applyViewport(xMn,xMx,yMn,yMx);
+  idx=i+(frac>.5?1:0);
+  frameV(YEARS[i],YEARS[Math.min(i+1,YEARS.length-1)],frac);
+  document.getElementById('gtlf').style.width=(t*100)+'%';
+  document.querySelectorAll('.gtick').forEach((e,j)=>e.classList.toggle('on',j===idx));
+}
+
+function gPlay(){
+  if(playing){stop2();return;}
+  if(idx>=YEARS.length-1)idx=0;
+  playing=true;
+  zoomed=false;
+  applyViewport(xMn,xMx,yMn,yMx);
+  document.getElementById('gppath').setAttribute('d','M3 2h2v8H3zM7 2h2v8H7z');
+  next2();
+}
+function stop2(){
+  playing=false;
+  if(af){cancelAnimationFrame(af);af=null;}
+  document.getElementById('gppath').setAttribute('d','M2 1.5l9 4.5-9 4.5z');
+}
+function next2(){
+  if(!playing)return;
+  const ni=idx+1;
+  if(ni>=YEARS.length){
+    stop2();
+    setIdx(YEARS.length-1,1);
+    return;
+  }
+  const fy=YEARS[idx]; as2=null;
+  document.querySelectorAll('.gtick').forEach((e,j)=>e.classList.toggle('on',j===ni));
+  function step(ts){
+    if(!playing)return;
+    if(!as2)as2=ts;
+    const raw=Math.min((ts-as2)/DUR,1);
+    const t=ease(raw);
+    idx=ni;
+    document.getElementById('gtlf').style.width=(((ni-1+raw)/(YEARS.length-1))*100)+'%';
+    frameV(fy,YEARS[ni],t);
+    if(raw<1){af=requestAnimationFrame(step);}
+    else{
+      setTimeout(()=>{
+        if(playing&&ni<YEARS.length-1){
+          next2();
+        } else {
+          stop2();
+          zoomed=true;
+          animateZoom(xMn,xMx,yMn,yMx,ZOOM_XMN,ZOOM_XMX,ZOOM_YMN,ZOOM_YMX,null);
+        }
+      },1100);
+    }
+  }
+  af=requestAnimationFrame(step);
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  applyViewport(xMn,xMx,yMn,yMx);
+  init();
+  frameV(YEARS[0],YEARS[0],1);
+});
+window.addEventListener('resize',()=>{init();applyViewport(zoomed?ZOOM_XMN:xMn,zoomed?ZOOM_XMX:xMx,zoomed?ZOOM_YMN:yMn,zoomed?ZOOM_YMX:yMx);frameV(YEARS[idx]||YEARS[0],YEARS[idx]||YEARS[0],1);});
+</script>
+</body>
+</html>

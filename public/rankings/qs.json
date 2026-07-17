@@ -1,0 +1,122 @@
+[
+    {
+        "year": 2027,
+        "rank_display": "1201-1400",
+        "rank": "1228",
+        "Research & Discovery": {
+            "Citations per Faculty": 13.1,
+            "Academic Reputation": 6.9
+        },
+        "Learning Experience": {
+            "Faculty Student Ratio": 3.6
+        },
+        "Employability": {
+            "Employer Reputation": 8.4,
+            "Employment Outcomes": 3.3
+        },
+        "Global Engagement": {
+            "International Student Ratio": 11.5,
+            "International Research Network": 55,
+            "International Faculty Ratio": 8.5
+        },
+        "Sustainability": {
+            "Sustainability Score": 57.4
+        }
+    },
+    {
+        "year": 2026,
+        "rank_display": "1201-1400",
+        "rank": "1228",
+        "Research & Discovery": {
+            "Citations per Faculty": 11.5,
+            "Academic Reputation": 6.8
+        },
+        "Learning Experience": {
+            "Faculty Student Ratio": 3.7
+        },
+        "Employability": {
+            "Employer Reputation": 4.5,
+            "Employment Outcomes": 2.1
+        },
+        "Global Engagement": {
+            "International Student Ratio": 14.7,
+            "International Research Network": 53.1,
+            "International Faculty Ratio": 9.9
+        },
+        "Sustainability": {
+            "Sustainability Score": 52.3
+        }
+    },
+    {
+        "year": 2025,
+        "rank_display": "1201-1400",
+        "rank": "1229",
+        "Research & Discovery": {
+            "Citations per Faculty": 5.3,
+            "Academic Reputation": 4.4
+        },
+        "Learning Experience": {
+            "Faculty Student Ratio": 2
+        },
+        "Employability": {
+            "Employer Reputation": 3,
+            "Employment Outcomes": 1.7
+        },
+        "Global Engagement": {
+            "International Student Ratio": 5.7,
+            "International Research Network": 45.1,
+            "International Faculty Ratio": 3.1
+        },
+        "Sustainability": {
+            "Sustainability Score": 8.8
+        }
+    },
+    {
+        "year": 2024,
+        "rank_display": "1201-1400",
+        "rank": "1234",
+        "Research & Discovery": {
+            "Citations per Faculty": 4.9,
+            "Academic Reputation": 3.9
+        },
+        "Learning Experience": {
+            "Faculty Student Ratio": 1.9
+        },
+        "Employability": {
+            "Employer Reputation": 3.1,
+            "Employment Outcomes": 7.5
+        },
+        "Global Engagement": {
+            "International Student Ratio": 6.5,
+            "International Research Network": 3,
+            "International Faculty Ratio": 3.5
+        },
+        "Sustainability": {
+            "Sustainability Score": 10.3
+        }
+    },
+    {
+        "year": 2023,
+        "rank_display": "1401+",
+        "rank": "1407",
+        "Research & Discovery": {
+            "Citations per Faculty": 4.9,
+            "Academic Reputation": 2.9
+        },
+        "Learning Experience": {
+            "Faculty Student Ratio": 2.1
+        },
+        "Employability": {
+            "Employer Reputation": 2,
+            "Employment Outcomes": 3.6
+        },
+        "Global Engagement": {
+            "International Student Ratio": 6.2,
+            "International Research Network": 38.1,
+            "International Faculty Ratio": 4.4
+        },
+        "Sustainability": {
+            "Sustainability Score": 0
+        }
+    }
+]

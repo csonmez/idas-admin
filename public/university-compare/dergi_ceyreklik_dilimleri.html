@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dergi Çeyreklik Dilimlerine Göre Araştırma Üniversitelerinin Dağılımı</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#f0f4f8;min-height:auto;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:20px;font-family:'Open Sans',sans-serif}
+#wrap{background:#fff;padding:26px 24px 18px;border:1px solid #d4e2ec;border-radius:8px;width:100%;max-width:1180px;box-shadow:0 4px 24px rgba(0,40,80,0.08)}
+
+#head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+#ttl{font-size:19px;font-weight:700;color:#1a1a1a;letter-spacing:-0.2px;line-height:1.3;text-align:center;flex:1}
+#yrbig{color:#e21a1a;font-weight:700;font-size:15px;display:block;margin-top:4px}
+#sub{font-size:10.5px;color:#8ab0c8;margin-top:6px;text-align:center}
+
+#chartbox{position:relative;width:100%;background:#fff;margin-top:10px}
+svg#gs{display:block;width:100%}
+
+#ctrl{display:flex;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap}
+#pbtn{width:36px;height:36px;border-radius:50%;border:2px solid #1a3a52;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
+#pbtn:hover{background:#eef2f6}
+#pbtn svg{width:12px;height:12px;fill:#1a3a52}
+#tlwrap{flex:1;min-width:180px}
+#tl{height:5px;background:#e4e8ec;border-radius:3px;cursor:pointer}
+#tlf{height:100%;background:#1a3a52;border-radius:3px;width:0%;transition:width .05s}
+.ticks{display:flex;justify-content:space-between;margin-top:6px}
+.tick{font-size:11px;color:#aab;cursor:pointer;padding:2px 6px;border-radius:4px;user-select:none;font-weight:600;transition:color .15s}
+.tick.on{color:#1a3a52}
+.tick:hover{color:#1a3a52}
+
+#tt{position:fixed;background:#fff;border:1px solid #c0d0dc;border-radius:8px;padding:10px 14px;font-size:11px;line-height:1.85;pointer-events:none;display:none;z-index:999;color:#3a5060;min-width:190px;box-shadow:0 4px 16px rgba(0,30,60,0.14)}
+#tt strong{color:#1a3a52;font-size:12.5px;display:block;margin-bottom:2px}
+#tt .tc{font-size:9px;color:#aab;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;display:block}
+.tr{display:flex;justify-content:space-between;gap:16px}
+.tv{font-weight:700}
+
+#src{font-size:9.5px;color:#8ab0c8;margin-top:10px;text-align:left}
+
+#sortbox{display:flex;gap:8px;align-items:center;margin:12px 0 4px;flex-wrap:wrap}
+#sortbox label{font-size:10.5px;color:#8ab0c8}
+select{font-size:10.5px;color:#3a5a70;border:1px solid #cddde8;border-radius:6px;padding:4px 10px;background:#f8fbfd;font-family:'Open Sans',sans-serif;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="wrap">
+
+  <div id="head">
+    <div id="ttl">Dergi Çeyreklik Dilimlerine Göre Araştırma Üniversitelerinin Dağılımı
+      <span id="yrbig">2020 Yılı</span>
+    </div>
+  </div>
+
+  <div id="sortbox">
+    <label>Sırala:</label>
+    <select id="sortsel" onchange="setSort(this.value)">
+      <option value="orig">Orijinal sıra</option>
+      <option value="q1">Q1 oranına göre ↓</option>
+      <option value="q1q2" selected>Q1+Q2 oranına göre ↓</option>
+      <option value="alpha">İsim (A–Z)</option>
+    </select>
+  </div>
+
+  <div id="chartbox">
+    <svg id="gs" role="img" aria-label="Dergi çeyreklik dilimlerine göre araştırma üniversitelerinin dağılımı"></svg>
+    <div id="tt"></div>
+  </div>
+
+  <div id="ctrl">
+    <button id="pbtn" onclick="gPlay()" title="Oynat / Duraklat">
+      <svg viewBox="0 0 12 12"><path id="ppath" d="M2 1.5l9 4.5-9 4.5z"/></svg>
+    </button>
+    <div id="tlwrap">
+      <div id="tl" onclick="gSeek(event)"><div id="tlf"></div></div>
+      <div class="ticks">
+        <span class="tick on" onclick="gJump(0)">2020</span>
+        <span class="tick"    onclick="gJump(1)">2022</span>
+        <span class="tick"    onclick="gJump(2)">2024</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const UNI_ORDER=["Orta Doğu Teknik Üniversitesi", "Koç Üniversitesi", "Sabancı Üniversitesi", "İstanbul Teknik Üniversitesi", "İ.D. Bilkent Üniversitesi", "Boğaziçi Üniversitesi", "İzmir Yüksek Teknoloji Enstitüsü", "Yıldız Teknik Üniversitesi", "İstanbul Üniversitesi", "Hacettepe Üniversitesi", "Erciyes Üniversitesi", "Gebze Teknik Üniversitesi", "Ankara Üniversitesi", "İstanbul Üniversitesi-Cerrahpaşa", "Ege Üniversitesi", "Gazi Üniversitesi", "Atatürk Üniversitesi", "Fırat Üniversitesi", "Marmara Üniversitesi", "Çukurova Üniversitesi", "Dokuz Eylül Üniversitesi", "Karadeniz Teknik Üniversitesi", "Bursa Uludağ Üniversitesi"];
+const QDATA={"Orta Doğu Teknik Üniversitesi": {"2020": {"Q4": 9.17, "Q3": 17.46, "Q2": 30.51, "Q1": 42.86}, "2022": {"Q4": 7.92, "Q3": 12.15, "Q2": 32.39, "Q1": 47.54}, "2024": {"Q4": 3.88, "Q3": 10.91, "Q2": 33.98, "Q1": 51.23}}, "Koç Üniversitesi": {"2020": {"Q4": 15.32, "Q3": 16.9, "Q2": 29.05, "Q1": 38.73}, "2022": {"Q4": 11.29, "Q3": 14.82, "Q2": 33.33, "Q1": 40.56}, "2024": {"Q4": 2.46, "Q3": 16.37, "Q2": 29.05, "Q1": 52.12}}, "Sabancı Üniversitesi": {"2020": {"Q4": 4.76, "Q3": 14.82, "Q2": 35.28, "Q1": 45.15}, "2022": {"Q4": 4.4, "Q3": 11.8, "Q2": 32.22, "Q1": 51.58}, "2024": {"Q4": 1.58, "Q3": 11.62, "Q2": 31.34, "Q1": 55.46}}, "İstanbul Teknik Üniversitesi": {"2020": {"Q4": 13.38, "Q3": 16.2, "Q2": 32.74, "Q1": 37.67}, "2022": {"Q4": 9.51, "Q3": 14.96, "Q2": 32.57, "Q1": 42.96}, "2024": {"Q4": 3.0, "Q3": 14.08, "Q2": 34.86, "Q1": 48.06}}, "İ.D. Bilkent Üniversitesi": {"2020": {"Q4": 6.01, "Q3": 17.32, "Q2": 26.5, "Q1": 50.18}, "2022": {"Q4": 5.62, "Q3": 12.83, "Q2": 34.45, "Q1": 47.1}, "2024": {"Q4": 1.24, "Q3": 11.82, "Q2": 30.69, "Q1": 56.26}}, "Boğaziçi Üniversitesi": {"2020": {"Q4": 9.37, "Q3": 13.43, "Q2": 28.97, "Q1": 48.23}, "2022": {"Q4": 7.92, "Q3": 13.91, "Q2": 29.76, "Q1": 48.42}, "2024": {"Q4": 4.41, "Q3": 9.88, "Q2": 26.81, "Q1": 58.9}}, "İzmir Yüksek Teknoloji Enstitüsü": {"2020": {"Q4": 12.5, "Q3": 12.68, "Q2": 25.52, "Q1": 49.3}, "2022": {"Q4": 9.68, "Q3": 13.56, "Q2": 32.92, "Q1": 43.84}, "2024": {"Q4": 4.75, "Q3": 16.55, "Q2": 32.05, "Q1": 46.66}}, "Yıldız Teknik Üniversitesi": {"2020": {"Q4": 19.4, "Q3": 26.81, "Q2": 24.52, "Q1": 29.27}, "2022": {"Q4": 14.49, "Q3": 19.44, "Q2": 31.09, "Q1": 34.98}, "2024": {"Q4": 6.18, "Q3": 18.52, "Q2": 34.39, "Q1": 40.91}}, "İstanbul Üniversitesi": {"2020": {"Q4": 30.34, "Q3": 22.4, "Q2": 22.75, "Q1": 24.52}, "2022": {"Q4": 23.99, "Q3": 22.05, "Q2": 28.04, "Q1": 25.92}, "2024": {"Q4": 10.22, "Q3": 20.25, "Q2": 28.69, "Q1": 40.84}}, "Hacettepe Üniversitesi": {"2020": {"Q4": 23.99, "Q3": 20.81, "Q2": 25.57, "Q1": 29.63}, "2022": {"Q4": 18.13, "Q3": 22.71, "Q2": 30.28, "Q1": 28.88}, "2024": {"Q4": 6.53, "Q3": 21.73, "Q2": 31.45, "Q1": 40.29}}, "Erciyes Üniversitesi": {"2020": {"Q4": 30.58, "Q3": 23.19, "Q2": 21.09, "Q1": 25.13}, "2022": {"Q4": 16.2, "Q3": 22.18, "Q2": 27.29, "Q1": 34.33}, "2024": {"Q4": 9.35, "Q3": 20.81, "Q2": 30.69, "Q1": 39.15}}, "Gebze Teknik Üniversitesi": {"2020": {"Q4": 17.99, "Q3": 23.28, "Q2": 26.98, "Q1": 31.75}, "2022": {"Q4": 10.9, "Q3": 17.75, "Q2": 33.04, "Q1": 38.32}, "2024": {"Q4": 4.94, "Q3": 19.58, "Q2": 36.69, "Q1": 38.8}}, "Ankara Üniversitesi": {"2020": {"Q4": 26.4, "Q3": 21.66, "Q2": 24.3, "Q1": 27.64}, "2022": {"Q4": 21.13, "Q3": 21.66, "Q2": 30.28, "Q1": 26.93}, "2024": {"Q4": 7.75, "Q3": 22.36, "Q2": 32.75, "Q1": 37.15}}, "İstanbul Üniversitesi-Cerrahpaşa": {"2020": {"Q4": 30.64, "Q3": 26.76, "Q2": 24.47, "Q1": 18.13}, "2022": {"Q4": 24.91, "Q3": 21.73, "Q2": 28.79, "Q1": 24.56}, "2024": {"Q4": 11.44, "Q3": 22.71, "Q2": 29.93, "Q1": 35.92}}, "Ege Üniversitesi": {"2020": {"Q4": 28.4, "Q3": 25.04, "Q2": 23.28, "Q1": 23.28}, "2022": {"Q4": 23.81, "Q3": 24.52, "Q2": 28.05, "Q1": 23.63}, "2024": {"Q4": 8.98, "Q3": 24.12, "Q2": 32.57, "Q1": 34.33}}, "Gazi Üniversitesi": {"2020": {"Q4": 29.76, "Q3": 26.76, "Q2": 24.12, "Q1": 19.37}, "2022": {"Q4": 22.05, "Q3": 24.16, "Q2": 29.98, "Q1": 23.81}, "2024": {"Q4": 8.11, "Q3": 22.4, "Q2": 34.57, "Q1": 34.92}}, "Atatürk Üniversitesi": {"2020": {"Q4": 29.46, "Q3": 26.28, "Q2": 22.4, "Q1": 21.87}, "2022": {"Q4": 18.13, "Q3": 19.89, "Q2": 31.34, "Q1": 30.64}, "2024": {"Q4": 9.51, "Q3": 18.13, "Q2": 33.27, "Q1": 39.08}}, "Fırat Üniversitesi": {"2020": {"Q4": 25.71, "Q3": 20.59, "Q2": 24.3, "Q1": 29.4}, "2022": {"Q4": 18.69, "Q3": 19.4, "Q2": 34.39, "Q1": 27.52}, "2024": {"Q4": 10.58, "Q3": 16.58, "Q2": 32.28, "Q1": 40.57}}, "Marmara Üniversitesi": {"2020": {"Q4": 26.76, "Q3": 21.48, "Q2": 25.71, "Q1": 26.05}, "2022": {"Q4": 22.58, "Q3": 22.22, "Q2": 29.1, "Q1": 26.1}, "2024": {"Q4": 7.57, "Q3": 22.53, "Q2": 32.92, "Q1": 36.97}}, "Çukurova Üniversitesi": {"2020": {"Q4": 31.69, "Q3": 22.35, "Q2": 21.66, "Q1": 24.3}, "2022": {"Q4": 21.51, "Q3": 22.75, "Q2": 27.16, "Q1": 28.57}, "2024": {"Q4": 7.75, "Q3": 22.01, "Q2": 30.98, "Q1": 39.26}}, "Dokuz Eylül Üniversitesi": {"2020": {"Q4": 27.64, "Q3": 22.18, "Q2": 25.0, "Q1": 25.18}, "2022": {"Q4": 24.47, "Q3": 22.88, "Q2": 28.7, "Q1": 23.95}, "2024": {"Q4": 11.64, "Q3": 23.1, "Q2": 32.98, "Q1": 32.27}}, "Karadeniz Teknik Üniversitesi": {"2020": {"Q4": 26.76, "Q3": 25.71, "Q2": 24.65, "Q1": 22.88}, "2022": {"Q4": 23.59, "Q3": 23.24, "Q2": 26.05, "Q1": 27.12}, "2024": {"Q4": 10.42, "Q3": 19.44, "Q2": 32.69, "Q1": 37.45}}, "Bursa Uludağ Üniversitesi": {"2020": {"Q4": 38.62, "Q3": 24.52, "Q2": 17.81, "Q1": 19.05}, "2022": {"Q4": 28.0, "Q3": 25.53, "Q2": 27.81, "Q1": 18.66}, "2024": {"Q4": 9.68, "Q3": 24.3, "Q2": 31.51, "Q1": 34.51}}};
+
+const NS='http://www.w3.org/2000/svg';
+const YEARS=['2020','2022','2024'];
+const Q_COLORS = {
+  Q1: '#440054',  // dark purple
+  Q2: '#3a5a8c',  // blue
+  Q3: '#fde622',  // yellow
+  Q4: '#54c667',  // green
+};
+const Q_LABELS = {Q1:'Q1',Q2:'Q2',Q3:'Q3',Q4:'Q4'};
+
+let curSort='q1q2';
+let activeOrder = [...UNI_ORDER];
+
+function mk(tag,a={}){const e=document.createElementNS(NS,tag);Object.entries(a).forEach(([k,v])=>e.setAttribute(k,v));return e;}
+function lerp(a,b,t){return a+(b-a)*t;}
+function ease(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;}
+
+/* ── LAYOUT ── */
+const ROW_H = 30, ROW_GAP = 5;
+const PAD = {t:14, r:50, b:46, l:230};
+let W,H,svg;
+
+function xDomainToPx(v, plotW){
+  // v in [-100,100] maps across plot width, centered at 0
+  return PAD.l + ((v+100)/200)*plotW;
+}
+
+function getRowOrder(){
+  const FIXED_YR = YEARS[YEARS.length-1]; // always sort by final year (2024) values, order stays constant across animation
+  if(curSort==='alpha') return [...UNI_ORDER].sort((a,b)=>a.localeCompare(b,'tr'));
+  if(curSort==='q1') return [...UNI_ORDER].sort((a,b)=>{
+    return QDATA[b][FIXED_YR].Q1 - QDATA[a][FIXED_YR].Q1;
+  });
+  if(curSort==='q1q2') return [...UNI_ORDER].sort((a,b)=>{
+    const va=QDATA[a][FIXED_YR], vb=QDATA[b][FIXED_YR];
+    return (vb.Q1+vb.Q2)-(va.Q1+va.Q2);
+  });
+  return [...UNI_ORDER];
+}
+
+function interpVals(uni, yrIdx, t){
+  // yrIdx: index into YEARS for the "to" year; interpolate from previous year if t<1
+  const toYr = YEARS[yrIdx];
+  const fromYr = yrIdx>0 ? YEARS[yrIdx-1] : YEARS[0];
+  const to = QDATA[uni][toYr];
+  const from = QDATA[uni][fromYr];
+  return {
+    Q1: lerp(from.Q1, to.Q1, t),
+    Q2: lerp(from.Q2, to.Q2, t),
+    Q3: lerp(from.Q3, to.Q3, t),
+    Q4: lerp(from.Q4, to.Q4, t),
+  };
+}
+
+function init(){
+  const box=document.getElementById('chartbox');
+  W = box.offsetWidth || 1000;
+  const n = UNI_ORDER.length;
+  H = PAD.t + n*(ROW_H+ROW_GAP) + PAD.b;
+  svg = document.getElementById('gs');
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.setAttribute('height', H);
+  svg.innerHTML='';
+
+  const plotW = W - PAD.l - PAD.r;
+
+  /* static grid + axis */
+  const gg = mk('g',{id:'ggrid'});
+  [-100,-50,0,50,100].forEach(v=>{
+    const x = xDomainToPx(v, plotW);
+    const isZero = (v===0);
+    gg.appendChild(mk('line',{x1:x,x2:x,y1:PAD.t,y2:H-PAD.b,
+      stroke:isZero?'#888':'#e4e4e4','stroke-width':isZero?'1.3':'1'}));
+    const t = mk('text',{x,y:H-PAD.b+18,'text-anchor':'middle',
+      fill:'#666','font-size':'11','font-family':"'Open Sans',sans-serif"});
+    t.textContent = v;
+    gg.appendChild(t);
+  });
+  const axTitle = mk('text',{x:PAD.l+plotW/2, y:H-10,'text-anchor':'middle',
+    fill:'#333','font-size':'12.5','font-weight':'700','font-family':"'Open Sans',sans-serif"});
+  axTitle.textContent='Yayın Yüzdesi';
+  gg.appendChild(axTitle);
+  svg.appendChild(gg);
+
+  /* Gapminder-style giant transparent year watermark, sits behind bars in empty space */
+  const wm = mk('text',{id:'gwm', x:PAD.l+plotW/2, y:PAD.t+(H-PAD.t-PAD.b)/2,
+    'text-anchor':'middle','dominant-baseline':'middle',
+    'font-size':Math.round((H-PAD.t-PAD.b)*0.55),'font-weight':'700',
+    'font-family':"'Open Sans',sans-serif",fill:'rgba(26,58,82,0.05)'});
+  wm.textContent='2020';
+  svg.appendChild(wm);
+
+  svg.appendChild(mk('g',{id:'gbars'}));
+  svg.appendChild(mk('g',{id:'glabels'}));
+
+  /* legend (top-right corner) */
+  const legend = mk('g',{id:'glegend'});
+  const lx0 = W - PAD.r - 6;
+  const ly0 = PAD.t + 4;
+  const legTitle = mk('text',{x:lx0,y:ly0-8,'text-anchor':'end','font-size':'10','font-weight':'700',
+    'font-family':"'Open Sans',sans-serif",fill:'#333'});
+  legTitle.textContent='Çeyrek Dilimleri';
+  legend.appendChild(legTitle);
+  ['Q1','Q2','Q3','Q4'].forEach((q,i)=>{
+    const ly = ly0 + i*18;
+    legend.appendChild(mk('rect',{x:lx0-14,y:ly,width:14,height:14,fill:Q_COLORS[q],rx:2}));
+    const t = mk('text',{x:lx0-20,y:ly+7,'text-anchor':'end','dominant-baseline':'middle',
+      'font-size':'10','font-family':"'Open Sans',sans-serif",fill:'#444'});
+    t.textContent=q;
+    legend.appendChild(t);
+  });
+  svg.appendChild(legend);
+}
+
+function frame(yrIdx, t){
+  document.getElementById('yrbig').textContent = YEARS[yrIdx]+' Yılı';
+  const wmEl = document.getElementById('gwm');
+  if(wmEl) wmEl.textContent = YEARS[yrIdx];
+  const plotW = W - PAD.l - PAD.r;
+  const order = getRowOrder();
+
+  const gb = document.getElementById('gbars');
+  const gl = document.getElementById('glabels');
+  gb.innerHTML=''; gl.innerHTML='';
+
+  order.forEach((uni, rowIdx) => {
+    const y0 = PAD.t + rowIdx*(ROW_H+ROW_GAP);
+    const vals = interpVals(uni, yrIdx, t);
+
+    // diverging stack: Q4,Q3 go left of 0 (negative), Q2,Q1 go right (positive)
+    // left side: Q4 outermost, Q3 innermost (touching 0)
+    // right side: Q2 innermost (touching 0), Q1 outermost
+    let leftCursor = 0; // value-space cursor, starts at 0 going negative
+    const q3w = vals.Q3, q4w = vals.Q4;
+    const q3_x1 = xDomainToPx(0, plotW);
+    const q3_x0 = xDomainToPx(-q3w, plotW);
+    const q4_x1 = q3_x0;
+    const q4_x0 = xDomainToPx(-q3w-q4w, plotW);
+
+    const q2_x0 = xDomainToPx(0, plotW);
+    const q2_x1 = xDomainToPx(vals.Q2, plotW);
+    const q1_x0 = q2_x1;
+    const q1_x1 = xDomainToPx(vals.Q2+vals.Q1, plotW);
+
+    const segs = [
+      {q:'Q3', x0:q3_x0, x1:q3_x1, val:q3w},
+      {q:'Q4', x0:q4_x0, x1:q4_x1, val:q4w},
+      {q:'Q2', x0:q2_x0, x1:q2_x1, val:vals.Q2},
+      {q:'Q1', x0:q1_x0, x1:q1_x1, val:vals.Q1},
+    ];
+
+    segs.forEach(s=>{
+      const r = mk('rect',{x:Math.min(s.x0,s.x1), y:y0, width:Math.abs(s.x1-s.x0), height:ROW_H,
+        fill:Q_COLORS[s.q]});
+      r.style.cursor='pointer';
+      r.addEventListener('mouseenter', ev=>showTip(ev, uni, vals, s.q));
+      r.addEventListener('mousemove', ev=>showTip(ev, uni, vals, s.q));
+      r.addEventListener('mouseleave', ()=>{document.getElementById('tt').style.display='none';});
+      gb.appendChild(r);
+    });
+
+    // row label (university name) on the left
+    const lbl = mk('text',{x:PAD.l-10, y:y0+ROW_H/2, 'text-anchor':'end','dominant-baseline':'middle',
+      'font-size':'11','font-family':"'Open Sans',sans-serif",fill:'#222'});
+    lbl.textContent = uni;
+    gl.appendChild(lbl);
+
+    // tick mark
+    gl.appendChild(mk('line',{x1:PAD.l-4,x2:PAD.l,y1:y0+ROW_H/2,y2:y0+ROW_H/2,stroke:'#888','stroke-width':'1'}));
+  });
+}
+
+function showTip(ev, uni, vals, hoveredQ){
+  const tip = document.getElementById('tt');
+  tip.innerHTML = `<strong>${uni}</strong><span class="tc">${YEARS[curYrIdx]} · ${Q_LABELS[hoveredQ]} vurgulu</span>
+    <div class="tr"><span style="color:${Q_COLORS.Q1}">■ Q1</span><span class="tv" style="color:${Q_COLORS.Q1}">${vals.Q1.toFixed(1)}%</span></div>
+    <div class="tr"><span style="color:${Q_COLORS.Q2}">■ Q2</span><span class="tv" style="color:${Q_COLORS.Q2}">${vals.Q2.toFixed(1)}%</span></div>
+    <div class="tr"><span style="color:#b8a000">■ Q3</span><span class="tv" style="color:#b8a000">${vals.Q3.toFixed(1)}%</span></div>
+    <div class="tr"><span style="color:#2a9040">■ Q4</span><span class="tv" style="color:#2a9040">${vals.Q4.toFixed(1)}%</span></div>`;
+  tip.style.display='block';
+  let l=ev.clientX+14, t=ev.clientY-10;
+  if(l+200>window.innerWidth-4) l=ev.clientX-210;
+  if(t+130>window.innerHeight-4) t=ev.clientY-135;
+  tip.style.left=l+'px'; tip.style.top=t+'px';
+}
+
+/* ── SORT ── */
+window.setSort = v=>{
+  curSort = v;
+  frame(curYrIdx, 1);
+};
+
+/* ── ANIMATION ── */
+let curYrIdx=0, playing=false, af=null, as2=null;
+const DUR=1700;
+
+function renderAll(i,t=1){
+  curYrIdx=i;
+  frame(i,t);
+  document.getElementById('tlf').style.width=((i/(YEARS.length-1))*100)+'%';
+  document.querySelectorAll('.tick').forEach((e,j)=>e.classList.toggle('on',j===i));
+}
+
+window.gJump=i=>{stop2();renderAll(i,1);};
+window.gSeek=ev=>{
+  const tl=document.getElementById('tl');
+  const br=tl.getBoundingClientRect();
+  const t=Math.max(0,Math.min(1,(ev.clientX-br.left)/br.width));
+  const raw=t*(YEARS.length-1);
+  const i=Math.min(Math.floor(raw),YEARS.length-2);
+  const frac=raw-i;
+  stop2(); curYrIdx=i+(frac>.5?1:0);
+  frame(Math.max(i,1),frac);
+  document.getElementById('tlf').style.width=(t*100)+'%';
+  document.querySelectorAll('.tick').forEach((e,j)=>e.classList.toggle('on',j===curYrIdx));
+};
+window.gPlay=()=>{
+  if(playing){stop2();return;}
+  if(curYrIdx>=YEARS.length-1)curYrIdx=0;
+  playing=true;
+  document.getElementById('ppath').setAttribute('d','M3 2h2v8H3zM7 2h2v8H7z');
+  next2();
+};
+function stop2(){
+  playing=false;
+  if(af){cancelAnimationFrame(af);af=null;}
+  document.getElementById('ppath').setAttribute('d','M2 1.5l9 4.5-9 4.5z');
+}
+function next2(){
+  if(!playing)return;
+  const ni=curYrIdx+1;
+  if(ni>=YEARS.length){stop2();renderAll(YEARS.length-1,1);return;}
+  as2=null;
+  document.querySelectorAll('.tick').forEach((e,j)=>e.classList.toggle('on',j===ni));
+  function step(ts){
+    if(!playing)return;
+    if(!as2)as2=ts;
+    const raw=Math.min((ts-as2)/DUR,1);
+    const t=ease(raw);
+    curYrIdx=ni;
+    document.getElementById('tlf').style.width=(((ni-1+raw)/(YEARS.length-1))*100)+'%';
+    frame(ni,t);
+    if(raw<1){af=requestAnimationFrame(step);}
+    else{setTimeout(()=>{if(playing&&ni<YEARS.length-1)next2();else stop2();},1000);}
+  }
+  af=requestAnimationFrame(step);
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  init();
+  renderAll(0,1);
+});
+window.addEventListener('resize',()=>{
+  init();
+  renderAll(curYrIdx,1);
+});
+</script>
+</body>
+</html>

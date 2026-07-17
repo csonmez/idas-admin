@@ -1,10 +1,29 @@
 export default defineNuxtRouteMiddleware(async (to) => {
-  if (to.path === '/login') return
+    const { isLoggedIn, isFetching, fetchUser } = useAuth()
 
-  const { fetchMe } = useAuth()
-  const user = await fetchMe()
+    // Public sayfalar: login ve ana sayfa
+    const publicRoutes = ['/login', '/']
+    const isPublicRoute = publicRoutes.includes(to.path) || to.meta.auth === false
 
-  if (!user) {
-    return navigateTo('/login')
-  }
+    // /login sayfasına gelindiğinde oturumu kontrol et
+    if (to.path === '/login' && !isFetching.value) {
+        await fetchUser()
+        if (isLoggedIn.value) {
+            return navigateTo('/dashboard')
+        }
+        return
+    }
+
+    // Korumalı sayfalarda oturum kontrolü
+    if (!isPublicRoute && !isLoggedIn.value && !isFetching.value) {
+        await fetchUser()
+
+        if (!isLoggedIn.value) {
+            return navigateTo('/login')
+        }
+    }
+
+    if (!isPublicRoute && !isLoggedIn.value) {
+        return navigateTo('/login')
+    }
 })

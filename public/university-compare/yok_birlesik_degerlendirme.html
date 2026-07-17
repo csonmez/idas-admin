@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>YÖK Araştırma Üniversiteleri — Performans Analizi 2020–2024</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#f0f4f8;min-height:auto;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:24px;font-family:'Open Sans',sans-serif}
+#wrap{background:#fff;padding:26px 24px 20px;border:1px solid #cddde8;border-radius:10px;width:100%;max-width:1100px;box-shadow:0 4px 24px rgba(0,40,80,0.08)}
+
+/* ── HEADER ── */
+#head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+#ttl{font-size:17px;font-weight:700;color:#1a3a52;letter-spacing:-0.2px;line-height:1.3}
+#sub{font-size:10.5px;color:#8ab0c8;margin-top:3px}
+#src{font-size:9.5px;color:#8ab0c8;text-align:right;line-height:1.7}
+
+/* ── UNİVERSİTE SEÇER ── */
+#selector{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid #eef4f8}
+.unibtn{padding:5px 11px;border:1px solid #cddde8;border-radius:20px;background:#f8fbfd;cursor:pointer;font-size:10.5px;color:#5a8aa8;font-family:'Open Sans',sans-serif;transition:all .15s;user-select:none}
+.unibtn:hover{border-color:#3a7ab8;color:#3a7ab8;background:#f0f7ff}
+.unibtn.active{background:#3a7ab8;border-color:#3a7ab8;color:#fff;font-weight:600}
+.unibtn.eru{border-color:#e85a28;color:#e85a28}
+.unibtn.eru.active{background:#e85a28;border-color:#e85a28;color:#fff}
+
+/* ── UNİ INFO BAR ── */
+#infobar{display:flex;gap:16px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+#uniname{font-size:15px;font-weight:700;color:#1a3a52}
+#unicat{font-size:10.5px;padding:3px 10px;border-radius:12px;font-weight:600}
+.scores-mini{display:flex;gap:10px;flex-wrap:wrap}
+.sm{font-size:10px;color:#8ab0c8}
+.sm strong{color:#1a3a52;font-size:11px}
+
+/* ── CHARTS GRID ── */
+#charts{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+@media(max-width:680px){#charts{grid-template-columns:1fr}}
+
+.panel{border:1px solid #e8f2f8;border-radius:8px;padding:16px 14px 12px;background:#fcfeff}
+.panel-title{font-size:11px;font-weight:700;color:#4a7a9a;letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px}
+
+/* ── LINE CHART ── */
+#linebox{position:relative}
+svg#lv{display:block;width:100%}
+
+/* ── RADAR CHART ── */
+#radarbox{position:relative}
+svg#rv{display:block;width:100%;margin:0 auto}
+
+/* ── CONTROLS ── */
+#ctrl{display:flex;align-items:center;gap:12px;margin-top:16px;padding-top:14px;border-top:1px solid #eef4f8}
+#pbtn{width:34px;height:34px;border-radius:50%;border:2px solid #3a7ab8;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
+#pbtn:hover{background:#e6f2fb}
+#pbtn svg{width:11px;height:11px;fill:#3a7ab8}
+#tlwrap{flex:1;min-width:160px}
+#tl{height:5px;background:#ddeef7;border-radius:3px;cursor:pointer}
+#tlf{height:100%;background:#3a7ab8;border-radius:3px;width:0%;transition:width .04s}
+.ticks{display:flex;justify-content:space-between;margin-top:6px}
+.tick{font-size:10.5px;color:#8ab0c8;cursor:pointer;padding:2px 5px;border-radius:3px;user-select:none;transition:color .12s}
+.tick.on{color:#1a3a52;font-weight:700}
+.tick:hover{color:#3a7ab8}
+#yrbadge{font-size:22px;font-weight:700;color:#1a3a52;min-width:46px;letter-spacing:-1px}
+
+/* ── TOOLTIP ── */
+#tt{position:fixed;background:#fff;border:1px solid #b8d4e8;border-radius:8px;padding:10px 14px;font-size:11px;line-height:1.85;pointer-events:none;display:none;z-index:999;color:#3a6070;min-width:160px;box-shadow:0 4px 16px rgba(0,50,90,0.12)}
+#tt strong{color:#1a3a52;font-size:12px;display:block;margin-bottom:2px}
+#tt .tc{font-size:9px;color:#8ab0c8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;display:block}
+.ttr{display:flex;justify-content:space-between;gap:14px}
+.ttv{color:#1a6aaa;font-weight:700}
+</style>
+</head>
+<body>
+<div id="wrap">
+
+  <!-- HEADER -->
+  <div id="head">
+    <div>
+      <div id="ttl">YÖK Araştırma Üniversiteleri — Performans Analizi 2020–2024</div>
+      <div id="sub">Puan değişimi ve bileşen analizi · Üniversite seçerek karşılaştırın</div>
+    </div>
+    <div id="src">YÖK Araştırma Üniversitesi<br>Performans İzleme Endeksi<br>2020 – 2024</div>
+  </div>
+
+  <!-- SELECTOR -->
+  <div id="selector"></div>
+
+  <!-- INFO BAR -->
+  <div id="infobar">
+    <div id="uniname">Erciyes Üniversitesi</div>
+    <div id="unicat"></div>
+    <div class="scores-mini" id="scoresmini"></div>
+  </div>
+
+  <!-- CHARTS -->
+  <div id="charts">
+    <div class="panel" id="linepanel">
+      <div class="panel-title">📈 Puan Değişimi — Tüm Üniversiteler</div>
+      <div id="linebox"><svg id="lv"></svg></div>
+    </div>
+    <div class="panel" id="radarpanel">
+      <div class="panel-title">🕸 YILLARA GÖRE DEĞİŞİM — Kapasite · Kalite · İşbirliği</div>
+      <div id="radarbox"><svg id="rv"></svg></div>
+    </div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div id="ctrl">
+    <button id="pbtn" onclick="gPlay()" title="Oynat">
+      <svg viewBox="0 0 11 12"><path id="ppath" d="M2 1.5l8 4.5-8 4.5z"/></svg>
+    </button>
+    <div id="yrbadge">2020</div>
+    <div id="tlwrap">
+      <div id="tl" onclick="gSeek(event)"><div id="tlf"></div></div>
+      <div class="ticks">
+        <span class="tick on" onclick="gJump(0)">2020</span>
+        <span class="tick"    onclick="gJump(1)">2021</span>
+        <span class="tick"    onclick="gJump(2)">2022</span>
+        <span class="tick"    onclick="gJump(3)">2023</span>
+        <span class="tick"    onclick="gJump(4)">2024</span>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="tt"></div>
+
+<script>
+const NS='http://www.w3.org/2000/svg';
+const YEARS=[2020,2021,2022,2023,2024];
+
+/* ── EXACT DATA FROM EXCEL ── */
+const DATA={
+  'ODTÜ':  {s:'ODTÜ',     cat:'A1',yr:{2020:[21.39,35.86,28.15],2021:[32.57,36.54,16.76],2022:[33.87,30.62,17.78],2023:[31,27,15],  2024:[30.29,26.91,16.12]}},
+  'İTÜ':   {s:'İTÜ',      cat:'A1',yr:{2020:[19.78,32.83,23.62],2021:[27.75,27.18,13.70],2022:[31.04,28.29,14.80],2023:[31,30,11],  2024:[28.96,27.53,12.51]}},
+  'BOÜN':  {s:'Boğaziçi', cat:'A1',yr:{2020:[14.59,27.50,28.24],2021:[21.29,28.82,13.14],2022:[20.87,28.62,12.44],2023:[24,33,14],  2024:[27.19,25.88,14.60]}},
+  'KÜ':    {s:'Koç',      cat:'A1',yr:{2020:null,                2021:[19.97,34.63,15.45],2022:[26.18,32.00,17.63],2023:[27,33,14],  2024:[31.61,28.94,13.81]}},
+  'SÜ':    {s:'Sabancı',  cat:'A1',yr:{2020:null,                2021:[15.59,37.15,16.29],2022:[22.33,34.74,17.42],2023:[24,33,16],  2024:[31.85,27.25,14.84]}},
+  'Bilkent':{s:'Bilkent', cat:'A1',yr:{2020:null,                2021:[23.93,27.61,14.79],2022:[24.89,28.36,14.60],2023:[23,29,12],  2024:[25.79,26.46,12.31]}},
+  'İYTE':  {s:'İYTE',     cat:'A2',yr:{2020:[15.98,24.95,19.94],2021:[25.61,19.14,13.19],2022:[25.23,19.64,14.40],2023:[25,22,13],  2024:[29.73,19.91,13.40]}},
+  'YTÜ':   {s:'YTÜ',      cat:'A2',yr:{2020:[16.20,23.33,14.58],2021:[23.45,18.06,9.36], 2022:[25.38,19.58,11.64],2023:[27,25,10],  2024:[29.08,23.69,11.99]}},
+  'AÜ':    {s:'Ankara',   cat:'A2',yr:{2020:[13.29,20.52,19.26],2021:[17.60,18.10,9.47], 2022:[20.10,17.31,10.87],2023:[26,19,12],  2024:[24.37,24.80,11.85]}},
+  'İÜ':    {s:'İÜ',       cat:'A2',yr:{2020:[15.03,16.29,18.74],2021:[21.54,23.70,9.48], 2022:[24.42,21.51,7.86], 2023:[24,19,9],   2024:[23.23,25.07,11.31]}},
+  'ERÜ':   {s:'ERÜ',      cat:'ERU',yr:{2020:[9.00,20.57,19.09],2021:[15.45,21.36,8.04], 2022:[17.79,22.33,9.49], 2023:[22,21,10],  2024:[24.03,23.15,11.54]}},
+  'HÜ':    {s:'Hacettepe',cat:'A2',yr:{2020:[15.89,20.91,11.69],2021:[21.04,22.59,6.63], 2022:[23.83,19.14,7.71], 2023:[24,23,7],   2024:[25.89,26.02,11.20]}},
+  'GTÜ':   {s:'GTÜ',      cat:'A2',yr:{2020:[13.98,16.05,14.03],2021:[20.35,19.69,10.10],2022:[17.40,19.06,12.27],2023:[18,16,11],  2024:[23.24,19.52,11.94]}},
+  'EÜ':    {s:'Ege',      cat:'A2',yr:{2020:[14.58,14.94,9.32], 2021:[20.76,14.42,9.88], 2022:[20.96,11.92,8.95], 2023:[25,15,10],  2024:[25.19,23.02,11.08]}},
+  'İÜC':   {s:'İÜC',      cat:'A2',yr:{2020:[11.81,5.63,19.91], 2021:[20.88,13.53,9.06], 2022:[22.32,12.24,9.25], 2023:[24,14,10],  2024:[24.56,22.38,10.38]}},
+  'GÜ':    {s:'Gazi',     cat:'A2',yr:{2020:[11.40,10.49,6.07], 2021:[19.88,15.06,6.12], 2022:[20.61,11.76,7.70], 2023:[25,14,7],   2024:[25.05,23.44,10.71]}},
+  'ATAÜNİ':{s:'Atatürk',  cat:'A2',yr:{2020:[4.27,14.94,8.82],  2021:[12.55,13.68,4.32], 2022:[14.78,19.76,4.46], 2023:[17,21,6],   2024:[22.51,24.62,11.00]}},
+  'SAÜ':   {s:'Sakarya',  cat:'A2',yr:{2020:null,2021:null,2022:null,2023:null,           2024:[20.89,26.36,11.02]}},
+  'MÜ':    {s:'Marmara',  cat:'A3',yr:{2020:[7.13,11.10,14.50], 2021:[11.42,13.35,8.26], 2022:[13.95,11.38,9.11], 2023:[16,16,10],  2024:[21.10,22.71,11.20]}},
+  'BUÜ':   {s:'BUÜ',      cat:'A3',yr:{2020:[5.42,13.09,13.76], 2021:[7.66,10.01,8.53],  2022:[7.86,10.23,9.90],  2023:[12,11,8],   2024:[20.79,19.61,10.80]}},
+  'DEÜ':   {s:'DEÜ',      cat:'A3',yr:{2020:[7.22,9.77,11.82],  2021:[11.98,14.11,6.00], 2022:[12.73,11.08,7.74], 2023:[20,9,6],    2024:null}},
+  'ÇÜ':    {s:'Çukurova', cat:'A3',yr:{2020:[6.24,9.91,11.49],  2021:[13.91,9.47,5.41],  2022:[14.22,11.46,7.22], 2023:[17,13,8],   2024:[21.86,21.83,10.38]}},
+  'FÜ':    {s:'Fırat',    cat:'A3',yr:{2020:[1.87,12.21,9.10],  2021:[10.08,20.37,6.28], 2022:[13.66,19.32,5.55], 2023:[17,16,5],   2024:[21.97,21.27,9.99]}},
+  'KTÜ':   {s:'KTÜ',      cat:'A3',yr:{2020:[3.99,9.09,7.15],   2021:[11.62,12.11,4.82], 2022:[11.96,12.46,4.44], 2023:[15,10,5],   2024:[21.65,20.58,10.06]}},
+};
+
+const FULLNAMES={
+  'ODTÜ':'Orta Doğu Teknik Üniversitesi','İTÜ':'İstanbul Teknik Üniversitesi',
+  'BOÜN':'Boğaziçi Üniversitesi','KÜ':'Koç Üniversitesi','SÜ':'Sabancı Üniversitesi',
+  'Bilkent':'İhsan Doğramacı Bilkent Üniversitesi','İYTE':'İzmir Yüksek Teknoloji Enstitüsü',
+  'YTÜ':'Yıldız Teknik Üniversitesi','AÜ':'Ankara Üniversitesi','İÜ':'İstanbul Üniversitesi',
+  'ERÜ':'Erciyes Üniversitesi','HÜ':'Hacettepe Üniversitesi','GTÜ':'Gebze Teknik Üniversitesi',
+  'EÜ':'Ege Üniversitesi','İÜC':'İstanbul Üniversitesi-Cerrahpaşa','GÜ':'Gazi Üniversitesi',
+  'ATAÜNİ':'Atatürk Üniversitesi','SAÜ':'Sakarya Üniversitesi','MÜ':'Marmara Üniversitesi',
+  'BUÜ':'Bursa Uludağ Üniversitesi','DEÜ':'Dokuz Eylül Üniversitesi',
+  'ÇÜ':'Çukurova Üniversitesi','FÜ':'Fırat Üniversitesi','KTÜ':'Karadeniz Teknik Üniversitesi',
+};
+
+const CAT_META={
+  A1:{col:'#2a6fc4',bg:'rgba(42,111,196,0.10)',label:'A1 — Üst Düzey'},
+  A2:{col:'#20a870',bg:'rgba(32,168,112,0.10)',label:'A2 — Yüksek Düzey'},
+  ERU:{col:'#e85a28',bg:'rgba(232,90,40,0.10)',label:'A2 — Erciyes'},
+  A3:{col:'#e0a018',bg:'rgba(224,160,24,0.10)',label:'A3 — Orta Düzey'},
+};
+
+/* year palette for radar layers */
+const YR_PAL_BLUE=[
+  {s:'#c8dff5',f:'rgba(200,223,245,0.10)'},
+  {s:'#7aaee0',f:'rgba(122,174,224,0.12)'},
+  {s:'#3a7ab8',f:'rgba(58,122,184,0.16)'},
+  {s:'#1a5090',f:'rgba(26,80,144,0.20)'},
+  {s:'#0a2a60',f:'rgba(10,42,96,0.25)'},
+];
+const YR_PAL_ORG=[
+  {s:'#fad0b0',f:'rgba(250,208,176,0.10)'},
+  {s:'#f09868',f:'rgba(240,152,104,0.12)'},
+  {s:'#e85a28',f:'rgba(232,90,40,0.16)'},
+  {s:'#c03808',f:'rgba(192,56,8,0.20)'},
+  {s:'#801800',f:'rgba(128,24,0,0.25)'},
+];
+
+/* all scores for y-axis domain */
+const allTotals=Object.values(DATA).flatMap(d=>YEARS.map(yr=>d.yr[yr]?d.yr[yr].reduce((a,b)=>a+b,0):null)).filter(v=>v!==null);
+const Y_MIN=Math.floor(Math.min(...allTotals))-3;
+const Y_MAX=Math.ceil(Math.max(...allTotals))+3;
+const MAX_CAP=Math.max(...Object.values(DATA).flatMap(d=>YEARS.map(yr=>d.yr[yr]?d.yr[yr][0]:0)));
+const MAX_KAL=Math.max(...Object.values(DATA).flatMap(d=>YEARS.map(yr=>d.yr[yr]?d.yr[yr][1]:0)));
+const MAX_ISB=Math.max(...Object.values(DATA).flatMap(d=>YEARS.map(yr=>d.yr[yr]?d.yr[yr][2]:0)));
+const MAXES=[MAX_CAP,MAX_KAL,MAX_ISB];
+
+function mk(tag,a={}){const e=document.createElementNS(NS,tag);Object.entries(a).forEach(([k,v])=>e.setAttribute(k,v));return e;}
+function lerp(a,b,t){return a+(b-a)*t;}
+function ease(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;}
+function norm(v,ai){return v/MAXES[ai];}
+function total(v){return v?v[0]+v[1]+v[2]:null;}
+function getCol(uid){return CAT_META[DATA[uid]?.cat]?.col||'#888';}
+
+let curUid='ERÜ';
+
+/* ── LABEL REPULSION ── */
+function repelLabels(entries){
+  const MIN_GAP=(Y_MAX-Y_MIN)*0.030;
+  const ys={};
+  entries.forEach(e=>ys[e.uid]=e.score);
+  for(let i=0;i<120;i++){
+    let moved=false;
+    for(let j=0;j<entries.length-1;j++){
+      const a=entries[j].uid,b=entries[j+1].uid;
+      if(ys[a]-ys[b]<MIN_GAP){
+        const mid=(ys[a]+ys[b])/2;
+        ys[a]=mid+MIN_GAP/2;ys[b]=mid-MIN_GAP/2;moved=true;
+      }
+    }
+    if(!moved)break;
+  }
+  return ys;
+}
+const labelYs={};
+YEARS.forEach(yr=>{
+  const entries=Object.entries(DATA)
+    .map(([uid,d])=>({uid,score:total(d.yr[yr])||0}))
+    .filter(e=>e.score>0)
+    .sort((a,b)=>b.score-a.score);
+  labelYs[yr]=repelLabels(entries);
+});
+
+/* ════════════════════════════════════════
+   LINE CHART
+   ════════════════════════════════════════ */
+let LW,LH,lsvg;
+const LP={t:24,r:88,b:38,l:46};
+
+function lxp(xi){return LP.l+xi/(YEARS.length-1)*(LW-LP.l-LP.r);}
+function lyp(v){return LH-LP.b-(v-Y_MIN)/(Y_MAX-Y_MIN)*(LH-LP.t-LP.b);}
+
+function initLine(){
+  const box=document.getElementById('linebox');
+  LW=box.offsetWidth||420; LH=Math.round(LW*0.72);
+  lsvg=document.getElementById('lv');
+  lsvg.setAttribute('viewBox',`0 0 ${LW} ${LH}`);
+  lsvg.setAttribute('height',LH);
+  lsvg.innerHTML='';
+
+  const defs=mk('defs');
+  const clip=mk('clipPath',{id:'lclip'});
+  clip.appendChild(mk('rect',{x:LP.l,y:LP.t,width:LW-LP.l-LP.r,height:LH-LP.t-LP.b}));
+  defs.appendChild(clip); lsvg.appendChild(defs);
+
+  const gg=mk('g');
+  /* grid */
+  for(let v=Math.ceil(Y_MIN/10)*10;v<=Y_MAX;v+=10){
+    gg.appendChild(mk('line',{x1:LP.l,x2:LW-LP.r,y1:lyp(v),y2:lyp(v),stroke:'#e8f2f8','stroke-width':'1'}));
+    const t=mk('text',{x:LP.l-6,y:lyp(v),'text-anchor':'end','dominant-baseline':'middle',
+      fill:'#8ab0c8','font-size':'9','font-family':"'Open Sans',sans-serif"});
+    t.textContent=v; gg.appendChild(t);
+  }
+  /* axes */
+  gg.appendChild(mk('line',{x1:LP.l,x2:LP.l,y1:LP.t,y2:LH-LP.b,stroke:'#a8cade','stroke-width':'1.5'}));
+  gg.appendChild(mk('line',{x1:LP.l,x2:LW-LP.r,y1:LH-LP.b,y2:LH-LP.b,stroke:'#a8cade','stroke-width':'1.5'}));
+  /* year verticals */
+  YEARS.forEach((yr,xi)=>{
+    gg.appendChild(mk('line',{x1:lxp(xi),x2:lxp(xi),y1:LP.t,y2:LH-LP.b,stroke:'#e8f2f8','stroke-width':'1','stroke-dasharray':'3 3'}));
+    const t=mk('text',{x:lxp(xi),y:LH-LP.b+14,'text-anchor':'middle',
+      fill:'#8ab0c8','font-size':'9.5','font-family':"'Open Sans',sans-serif",'font-weight':'600'});
+    t.textContent=yr; gg.appendChild(t);
+  });
+  /* y-axis title */
+  const at=mk('text',{fill:'#6a8fa8','font-family':"'Open Sans',sans-serif",'font-weight':'600','font-size':'9',
+    transform:'rotate(-90)',x:-((LP.t+LH-LP.b)/2),y:11,'text-anchor':'middle'});
+  at.textContent='↑ Toplam Puan'; gg.appendChild(at);
+  /* watermark */
+  const wm=mk('text',{id:'lwm',x:LW-LP.r-6,y:LH-LP.b-6,
+    'text-anchor':'end','font-size':Math.round(LH*0.28),'font-weight':'700',
+    'font-family':"'Open Sans',sans-serif",fill:'rgba(26,80,150,0.042)'});
+  wm.textContent='2020'; gg.appendChild(wm);
+  lsvg.appendChild(gg);
+  lsvg.appendChild(mk('g',{id:'llines','clip-path':'url(#lclip)'}));
+  lsvg.appendChild(mk('g',{id:'ldots'}));
+  lsvg.appendChild(mk('g',{id:'llabels'}));
+}
+
+function drawLine(revealT){
+  const wm=document.getElementById('lwm');
+  if(wm) wm.textContent=YEARS[Math.min(Math.round(revealT),YEARS.length-1)];
+
+  const gl=document.getElementById('llines');
+  const gd=document.getElementById('ldots');
+  const glb=document.getElementById('llabels');
+  gl.innerHTML=''; gd.innerHTML=''; glb.innerHTML='';
+
+  const selCol=getCol(curUid);
+  const selCat=DATA[curUid]?.cat;
+
+  /* draw all lines */
+  Object.entries(DATA).forEach(([uid,d])=>{
+    const isSel=(uid===curUid);
+    const col=getCol(uid);
+    const lw=isSel?3.0:1.1;
+    const op=isSel?1:0.22;
+    const z=isSel?8:2;
+
+    const pts=YEARS.map((yr,xi)=>({xi,yr,s:total(d.yr[yr])})).filter(p=>p.s!==null);
+    if(pts.length<1)return;
+
+    for(let si=0;si<pts.length-1;si++){
+      const {xi:x0,s:s0}=pts[si],{xi:x1,s:s1}=pts[si+1];
+      if(revealT<=x0)break;
+      const segT=ease(Math.min(1,revealT-x0));
+      const xe=lerp(x0,x1,segT),se=lerp(s0,s1,segT);
+      const N=40,xs=[],ys2=[];
+      for(let k=0;k<N;k++){
+        xs.push(lxp(lerp(x0,xe,k/(N-1))));
+        ys2.push(lyp(lerp(s0,se,ease(k/(N-1)))));
+      }
+      const pl=mk('polyline',{points:xs.map((x,i)=>`${x},${ys2[i]}`).join(' '),
+        fill:'none',stroke:col,'stroke-width':lw,'stroke-linecap':'round',opacity:op});
+      gl.appendChild(pl);
+
+      if(isSel){
+        /* wide invisible hit area */
+        const ph=mk('polyline',{points:xs.map((x,i)=>`${x},${ys2[i]}`).join(' '),
+          fill:'none',stroke:'transparent','stroke-width':14,style:'cursor:pointer'});
+        ph.addEventListener('mousemove',ev=>showLineTip(ev,uid,revealT));
+        ph.addEventListener('mouseleave',hideTip);
+        gl.appendChild(ph);
+      }
+    }
+
+    /* dots */
+    pts.forEach(({xi,yr,s})=>{
+      const da=ease(Math.min(1,Math.max(0,revealT-xi+0.8)));
+      if(da<0.05)return;
+      const ms=isSel?7.5:3.5;
+      if(isSel){
+        gd.appendChild(mk('circle',{cx:lxp(xi),cy:lyp(s),r:ms+4.5,
+          fill:'none',stroke:col,'stroke-width':'1.2',opacity:da*0.3}));
+      }
+      const c=mk('circle',{cx:lxp(xi),cy:lyp(s),r:ms,
+        fill:col,stroke:'white','stroke-width':isSel?1.8:0.6,
+        opacity:da*op,style:'cursor:pointer'});
+      if(isSel){
+        c.addEventListener('mouseenter',ev=>showDotTip(ev,uid,yr,s));
+        c.addEventListener('mouseleave',hideTip);
+      }
+      gd.appendChild(c);
+    });
+  });
+
+  /* labels — left (2020) */
+  const yr0=YEARS[0];
+  const lys0=labelYs[yr0];
+  Object.entries(DATA).forEach(([uid,d])=>{
+    const s=total(d.yr[yr0]);if(s===null)return;
+    const isSel=(uid===curUid);
+    const ly=lys0[uid]??s;
+    if(Math.abs(ly-s)>0.4){
+      glb.appendChild(mk('line',{x1:LP.l-1,y1:lyp(s),x2:LP.l-6,y2:lyp(ly),
+        stroke:getCol(uid),'stroke-width':'0.5',opacity:isSel?0.5:0.15}));
+    }
+    const t=mk('text',{x:LP.l-8,y:lyp(ly),'text-anchor':'end','dominant-baseline':'middle',
+      'font-size':isSel?9:7.5,'font-weight':isSel?'700':'400',
+      'font-family':"'Open Sans',sans-serif",fill:getCol(uid),opacity:isSel?1:0.3});
+    t.textContent=DATA[uid].s; glb.appendChild(t);
+  });
+
+  /* labels — right (last revealed year) */
+  const lastXi=Math.min(Math.floor(revealT),YEARS.length-1);
+  if(lastXi>0){
+    const yrR=YEARS[lastXi];
+    const ra=ease(Math.min(1,Math.max(0,revealT-lastXi+0.6)));
+    const lysR=labelYs[yrR]||{};
+    Object.entries(DATA).forEach(([uid,d])=>{
+      const s=total(d.yr[yrR]);if(s===null)return;
+      const isSel=(uid===curUid);
+      const ly=lysR[uid]??s;
+      if(Math.abs(ly-s)>0.4){
+        glb.appendChild(mk('line',{x1:lxp(lastXi)+1,y1:lyp(s),x2:lxp(lastXi)+6,y2:lyp(ly),
+          stroke:getCol(uid),'stroke-width':'0.5',opacity:ra*(isSel?0.5:0.15)}));
+      }
+      const t=mk('text',{x:lxp(lastXi)+8,y:lyp(ly),'text-anchor':'start','dominant-baseline':'middle',
+        'font-size':isSel?9:7.5,'font-weight':isSel?'700':'400',
+        'font-family':"'Open Sans',sans-serif",fill:getCol(uid),opacity:ra*(isSel?1:0.3)});
+      t.textContent=DATA[uid].s; glb.appendChild(t);
+    });
+
+    /* selected uni live score badge */
+    const xiF=Math.min(revealT,YEARS.length-1);
+    const xiI=Math.min(Math.floor(xiF),YEARS.length-2);
+    const sA=total(DATA[curUid].yr[YEARS[xiI]]);
+    const sB=total(DATA[curUid].yr[YEARS[Math.min(xiI+1,YEARS.length-1)]]);
+    if(sA!==null&&sB!==null){
+      const curS=lerp(sA,sB,ease(xiF-xiI));
+      const bx=lxp(xiF)+12,by=lyp(curS);
+      glb.appendChild(mk('rect',{x:bx-2,y:by-9,width:74,height:18,rx:4,
+        fill:'white',stroke:selCol,'stroke-width':'1.2',opacity:0.94}));
+      const bt=mk('text',{x:bx+35,y:by+1,'text-anchor':'middle','dominant-baseline':'middle',
+        'font-size':'8.5','font-weight':'700','font-family':"'Open Sans',sans-serif",fill:selCol});
+      bt.textContent=`${DATA[curUid].s}: ${curS.toFixed(1)}`;
+      glb.appendChild(bt);
+    }
+  }
+}
+
+/* ════════════════════════════════════════
+   RADAR CHART
+   ════════════════════════════════════════ */
+let RW,RH,RCX,RCY,RR,rsvg;
+const N_AX=3;
+const AX_LABELS=['Araştırma\nKapasitesi','Araştırma\nKalitesi','Araştırma\nİşbirliği'];
+const AX_OFF=[{dx:0,dy:-16},{dx:20,dy:12},{dx:-20,dy:12}];
+
+function radarPt(ai,rn){
+  const ang=(-Math.PI/2)+ai*(2*Math.PI/N_AX);
+  return{x:RCX+RR*rn*Math.cos(ang),y:RCY+RR*rn*Math.sin(ang)};
+}
+
+function initRadar(){
+  const box=document.getElementById('radarbox');
+  RW=box.offsetWidth||400; RH=Math.round(RW*0.88); RH=Math.min(RH,460);
+  RCX=RW/2; RCY=RH/2+10; RR=Math.min(RW,RH)*0.33;
+  rsvg=document.getElementById('rv');
+  rsvg.setAttribute('viewBox',`0 0 ${RW} ${RH}`);
+  rsvg.setAttribute('height',RH);
+  rsvg.innerHTML='';
+
+  /* static: rings + axes + labels */
+  const gg=mk('g');
+  [0.25,0.5,0.75,1].forEach(rv=>{
+    const pp=[];
+    for(let ai=0;ai<N_AX;ai++){const p=radarPt(ai,rv);pp.push(`${p.x},${p.y}`);}
+    gg.appendChild(mk('polygon',{points:pp.join(' '),fill:'none',stroke:'#e4f0f8','stroke-width':'1'}));
+    const p0=radarPt(0,rv);
+    const t=mk('text',{x:p0.x+3,y:p0.y,'dominant-baseline':'middle',
+      'font-size':'8','font-family':"'Open Sans',sans-serif",fill:'#b0ccd8'});
+    t.textContent=Math.round(rv*100)+'%'; gg.appendChild(t);
+  });
+  for(let ai=0;ai<N_AX;ai++){
+    const p=radarPt(ai,1);
+    gg.appendChild(mk('line',{x1:RCX,y1:RCY,x2:p.x,y2:p.y,stroke:'#d8eaf4','stroke-width':'1.2'}));
+  }
+  AX_LABELS.forEach((lbl,ai)=>{
+    const p=radarPt(ai,1.22);
+    const off=AX_OFF[ai]||{dx:0,dy:0};
+    lbl.split('\n').forEach((line,li)=>{
+      const t=mk('text',{x:p.x+off.dx,y:p.y+off.dy+li*12,
+        'text-anchor':'middle','dominant-baseline':'middle',
+        'font-size':'9.5','font-weight':'600','font-family':"'Open Sans',sans-serif",fill:'#4a7a9a'});
+      t.textContent=line; gg.appendChild(t);
+    });
+  });
+  rsvg.appendChild(gg);
+  rsvg.appendChild(mk('g',{id:'rshapes'}));
+  rsvg.appendChild(mk('g',{id:'rdots'}));
+  rsvg.appendChild(mk('g',{id:'rcenter'}));
+}
+
+function drawRadar(revealT){
+  const d=DATA[curUid]; if(!d)return;
+  const pal=curUid==='ERÜ'?YR_PAL_ORG:YR_PAL_BLUE;
+  const col=CAT_META[d.cat]?.col||'#3a7ab8';
+
+  const gs=document.getElementById('rshapes');
+  const gd=document.getElementById('rdots');
+  const gc=document.getElementById('rcenter');
+  gs.innerHTML=''; gd.innerHTML=''; gc.innerHTML='';
+
+  /* center label */
+  const ct=mk('text',{x:RCX,y:RCY+RR*0.10,'text-anchor':'middle','dominant-baseline':'middle',
+    'font-size':'12.5','font-weight':'700','font-family':"'Open Sans',sans-serif",fill:col});
+  ct.textContent=FULLNAMES[curUid]||d.s; gc.appendChild(ct);
+
+  /* draw year layers */
+  const lastXi=Math.min(Math.floor(revealT),YEARS.length-1);
+  YEARS.forEach((yr,yi)=>{
+    if(yi>lastXi)return;
+    const vals=d.yr[yr]; if(!vals)return;
+    const isLast=(yi===lastXi);
+    const animFrac=isLast?ease(Math.min(1,revealT-yi)):1;
+
+    let nv=vals.map((v,ai)=>norm(v,ai));
+    if(isLast&&animFrac<1){
+      const pyr=YEARS[yi-1];
+      const pv=pyr?d.yr[pyr]:null;
+      const pn=pv?pv.map((v,ai)=>norm(v,ai)):nv.map(()=>0);
+      nv=nv.map((v,ai)=>lerp(pn[ai],v,animFrac));
+    }
+
+    const pp=nv.map((_,ai)=>{const p=radarPt(ai,nv[ai]);return`${p.x},${p.y}`;});
+    const c=pal[yi];
+    gs.appendChild(mk('polygon',{points:pp.join(' '),
+      fill:c.f,stroke:c.s,'stroke-width':isLast?2.2:1,
+      opacity:isLast?1:(0.45+yi*0.1)}));
+
+    /* dots + value labels on last layer */
+    if(isLast){
+      nv.forEach((nVal,ai)=>{
+        const p=radarPt(ai,nVal);
+        gd.appendChild(mk('circle',{cx:p.x,cy:p.y,r:5,fill:c.s,stroke:'white','stroke-width':'1.5'}));
+        const vp=radarPt(ai,nVal+0.14);
+        const vt=mk('text',{x:vp.x,y:vp.y,'text-anchor':'middle','dominant-baseline':'middle',
+          'font-size':'9','font-weight':'700','font-family':"'Open Sans',sans-serif",fill:c.s});
+        vt.textContent=vals[ai].toFixed(1); gd.appendChild(vt);
+      });
+    }
+  });
+
+  /* year-colour legend inside radar */
+  const ly0=RCY+RR*0.30;
+  YEARS.forEach((yr,yi)=>{
+    if(yi>lastXi)return;
+    const c=pal[yi];
+    const lx=RCX-28, ly=ly0+yi*14;
+    gs.appendChild(mk('rect',{x:lx,y:ly-4,width:14,height:5,rx:2,fill:c.s,opacity:0.85}));
+    const t=mk('text',{x:lx+17,y:ly,'dominant-baseline':'middle',
+      'font-size':'8.5','font-family':"'Open Sans',sans-serif",fill:'#6a8fa8'});
+    t.textContent=yr; gs.appendChild(t);
+  });
+}
+
+/* ════════════════════════════════════════
+   INFO BAR
+   ════════════════════════════════════════ */
+function updateInfoBar(revealT){
+  const d=DATA[curUid]; if(!d)return;
+  const cat=CAT_META[d.cat];
+  const col=cat?.col||'#888';
+  document.getElementById('uniname').textContent=FULLNAMES[curUid]||d.s;
+  document.getElementById('uniname').style.color=col;
+  const cb=document.getElementById('unicat');
+  cb.textContent=cat?.label||d.cat;
+  cb.style.background=cat?.bg||'#eee';
+  cb.style.color=col;
+  cb.style.border=`1px solid ${col}`;
+
+  /* mini scores for last revealed year */
+  const lastXi=Math.min(Math.floor(revealT),YEARS.length-1);
+  const yr=YEARS[lastXi];
+  const vals=d.yr[yr];
+  const sm=document.getElementById('scoresmini');
+  if(vals){
+    const t=vals.reduce((a,b)=>a+b,0);
+    sm.innerHTML=`
+      <div class="sm"><strong>${yr}</strong></div>
+      <div class="sm">Kapasite: <strong>${vals[0].toFixed(2)}</strong></div>
+      <div class="sm">Kalite: <strong>${vals[1].toFixed(2)}</strong></div>
+      <div class="sm">İşbirliği: <strong>${vals[2].toFixed(2)}</strong></div>
+      <div class="sm" style="border-left:2px solid ${col};padding-left:6px;margin-left:4px">
+        Toplam: <strong style="color:${col};font-size:12px">${t.toFixed(2)}</strong></div>`;
+  } else {
+    sm.innerHTML=`<div class="sm" style="color:#ccc">${yr} — veri yok</div>`;
+  }
+}
+
+/* ════════════════════════════════════════
+   TOOLTIPS
+   ════════════════════════════════════════ */
+function showLineTip(ev,uid,revealT){
+  const lastXi=Math.min(Math.floor(revealT),YEARS.length-1);
+  const yr=YEARS[lastXi];
+  const d=DATA[uid]; const vals=d.yr[yr];
+  if(!vals){hideTip();return;}
+  const t=vals.reduce((a,b)=>a+b,0);
+  const tip=document.getElementById('tt');
+  tip.innerHTML=`<strong>${FULLNAMES[uid]||d.s}</strong>
+    <span class="tc">${CAT_META[d.cat]?.label||d.cat} · ${yr}</span>
+    <div class="ttr"><span>Kapasite</span><span class="ttv">${vals[0].toFixed(2)}</span></div>
+    <div class="ttr"><span>Kalite</span><span class="ttv">${vals[1].toFixed(2)}</span></div>
+    <div class="ttr"><span>İşbirliği</span><span class="ttv">${vals[2].toFixed(2)}</span></div>
+    <div class="ttr" style="border-top:1px solid #e4f0f8;margin-top:4px;padding-top:4px">
+      <span>Toplam</span><span class="ttv">${t.toFixed(2)}</span></div>`;
+  posTip(ev); tip.style.display='block';
+}
+function showDotTip(ev,uid,yr,s){
+  const d=DATA[uid]; const vals=d.yr[yr];
+  const tip=document.getElementById('tt');
+  tip.innerHTML=`<strong>${FULLNAMES[uid]||d.s}</strong>
+    <span class="tc">${CAT_META[d.cat]?.label||d.cat} · ${yr}</span>
+    ${vals?`<div class="ttr"><span>Kapasite</span><span class="ttv">${vals[0].toFixed(2)}</span></div>
+    <div class="ttr"><span>Kalite</span><span class="ttv">${vals[1].toFixed(2)}</span></div>
+    <div class="ttr"><span>İşbirliği</span><span class="ttv">${vals[2].toFixed(2)}</span></div>
+    <div class="ttr" style="border-top:1px solid #e4f0f8;margin-top:4px;padding-top:4px">
+      <span>Toplam</span><span class="ttv">${s.toFixed(2)}</span></div>`:''}`;
+  posTip(ev); tip.style.display='block';
+}
+function hideTip(){document.getElementById('tt').style.display='none';}
+function posTip(ev){
+  const tip=document.getElementById('tt');
+  let l=ev.clientX+14,t=ev.clientY-10;
+  if(l+200>window.innerWidth-4)l=ev.clientX-215;
+  if(t+180>window.innerHeight-4)t=ev.clientY-185;
+  tip.style.left=l+'px'; tip.style.top=t+'px';
+}
+
+/* ════════════════════════════════════════
+   SELECTOR
+   ════════════════════════════════════════ */
+function buildSelector(){
+  const c=document.getElementById('selector');
+  c.innerHTML='';
+  Object.entries(DATA).forEach(([uid,d])=>{
+    const btn=document.createElement('button');
+    btn.className='unibtn'+(d.cat==='ERU'?' eru':'')+(uid===curUid?' active':'');
+    btn.textContent=d.s;
+    btn.onclick=()=>{
+      curUid=uid;
+      document.querySelectorAll('.unibtn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      renderAll(curYrIdx,1);
+    };
+    c.appendChild(btn);
+  });
+}
+
+/* ════════════════════════════════════════
+   ANIMATION
+   ════════════════════════════════════════ */
+let curYrIdx=YEARS.length-1,playing=false,af=null,as2=null;
+const DUR=1700;
+
+function renderAll(yrIdx,t=1){
+  curYrIdx=yrIdx;
+  const revealT=yrIdx===0?0:yrIdx-1+t;
+  drawLine(revealT);
+  drawRadar(revealT);
+  updateInfoBar(revealT);
+  const pct=(yrIdx/(YEARS.length-1))*100;
+  document.getElementById('tlf').style.width=pct+'%';
+  document.getElementById('yrbadge').textContent=YEARS[yrIdx];
+  document.querySelectorAll('.tick').forEach((e,j)=>e.classList.toggle('on',j===yrIdx));
+}
+
+// fix: yrbage id typo
+function setYrBadge(yr){
+  const el=document.getElementById('yrbadge')||document.getElementById('yrbadge');
+  if(el) el.textContent=yr;
+}
+
+window.gJump=i=>{stop2();renderAll(i,1);};
+window.gSeek=ev=>{
+  const tl=document.getElementById('tl');
+  const br=tl.getBoundingClientRect();
+  const t=Math.max(0,Math.min(1,(ev.clientX-br.left)/br.width));
+  const raw=t*(YEARS.length-1);
+  const i=Math.round(raw);
+  stop2();
+  curYrIdx=i;
+  drawLine(raw); drawRadar(raw); updateInfoBar(raw);
+  document.getElementById('tlf').style.width=(t*100)+'%';
+  document.getElementById('yrbadge').textContent=YEARS[i];
+  document.querySelectorAll('.tick').forEach((e,j)=>e.classList.toggle('on',j===i));
+};
+window.gPlay=()=>{
+  if(playing){stop2();return;}
+  if(curYrIdx>=YEARS.length-1)curYrIdx=0;
+  playing=true;
+  document.getElementById('ppath').setAttribute('d','M3 2h2v8H3zM7 2h2v8H7z');
+  next2();
+};
+function stop2(){
+  playing=false;
+  if(af){cancelAnimationFrame(af);af=null;}
+  document.getElementById('ppath').setAttribute('d','M2 1.5l8 4.5-8 4.5z');
+}
+function next2(){
+  if(!playing)return;
+  const ni=curYrIdx+1;
+  if(ni>=YEARS.length){stop2();renderAll(YEARS.length-1,1);return;}
+  as2=null;
+  document.querySelectorAll('.tick').forEach((e,j)=>e.classList.toggle('on',j===ni));
+  function step(ts){
+    if(!playing)return;
+    if(!as2)as2=ts;
+    const raw=Math.min((ts-as2)/DUR,1);
+    const t=ease(raw);
+    curYrIdx=ni;
+    const revealT=ni-1+t;
+    drawLine(revealT); drawRadar(revealT); updateInfoBar(revealT);
+    document.getElementById('tlf').style.width=((revealT/(YEARS.length-1))*100)+'%';
+    document.getElementById('yrbadge').textContent=YEARS[raw>0.5?ni:ni-1];
+    if(raw<1){af=requestAnimationFrame(step);}
+    else{setTimeout(()=>{if(playing&&ni<YEARS.length-1)next2();else stop2();},800);}
+  }
+  af=requestAnimationFrame(step);
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  buildSelector();
+  initLine(); initRadar();
+  renderAll(YEARS.length-1,1);
+  // fix year badge id
+  const el=document.getElementById('yrbadge');
+  if(el)el.textContent=YEARS[YEARS.length-1];
+});
+window.addEventListener('resize',()=>{
+  initLine(); initRadar();
+  renderAll(curYrIdx,1);
+});
+</script>
+</body>
+</html>

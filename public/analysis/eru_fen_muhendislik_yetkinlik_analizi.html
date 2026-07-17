@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ERÜ Fen ve Mühendislik Bilimleri — Birim Bazlı Yetkinlik Analizi 2023–2025</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#f0f4f8;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:20px;font-family:'Open Sans',sans-serif}
+#wrap{background:#fff;padding:24px 22px 18px;border:1px solid #d4e2ec;border-radius:8px;width:100%;max-width:1180px;box-shadow:0 4px 24px rgba(0,40,80,0.08)}
+
+/* HEADER */
+#head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+#ttl{font-size:18px;font-weight:700;color:#1a3a52;letter-spacing:-0.2px;line-height:1.3}
+#sub{font-size:10.5px;color:#8ab0c8;margin-top:3px}
+#src{font-size:9.5px;color:#8ab0c8;text-align:right;line-height:1.7}
+
+/* FACULTY FILTER */
+#facfilter{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 10px}
+.facbtn{padding:5px 12px;border:1.5px solid #ddd;border-radius:20px;background:#fff;cursor:pointer;font-size:10px;font-weight:600;color:#888;font-family:'Open Sans',sans-serif;transition:all .15s;display:flex;align-items:center;gap:5px}
+.facbtn .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.facbtn.on{color:#fff}
+.facbtn.dim{opacity:0.35}
+#allbtn{padding:5px 12px;border:1.5px solid #1a3a52;border-radius:20px;background:#1a3a52;color:#fff;cursor:pointer;font-size:10px;font-weight:700;font-family:'Open Sans',sans-serif}
+
+/* CHART */
+#chartbox{position:relative;width:100%;background:#fff}
+svg#gs{display:block;width:100%}
+.blab{font-family:'Open Sans',sans-serif;pointer-events:none}
+
+/* CONTROLS */
+#ctrl{display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap}
+#pbtn{width:36px;height:36px;border-radius:50%;border:2px solid #1a3a52;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
+#pbtn:hover{background:#eef2f6}
+#pbtn svg{width:12px;height:12px;fill:#1a3a52}
+#tlwrap{flex:1;min-width:180px}
+#tl{height:5px;background:#e4e8ec;border-radius:3px;cursor:pointer}
+#tlf{height:100%;background:#1a3a52;border-radius:3px;width:0%;transition:width .05s}
+.ticks{display:flex;justify-content:space-between;margin-top:6px}
+.tick{font-size:11px;color:#aab;cursor:pointer;padding:2px 6px;border-radius:4px;user-select:none;font-weight:600;transition:color .15s}
+.tick.on{color:#1a3a52}
+.tick:hover{color:#1a3a52}
+
+/* TOOLTIP */
+#tt{position:fixed;background:#fff;border:1px solid #c0d0dc;border-radius:8px;padding:10px 14px;font-size:11px;line-height:1.85;pointer-events:none;display:none;z-index:999;color:#3a5060;min-width:190px;box-shadow:0 4px 16px rgba(0,30,60,0.14)}
+#tt strong{color:#1a3a52;font-size:12.5px;display:block;margin-bottom:2px}
+#tt .tc{font-size:9px;color:#aab;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;display:block}
+.tr{display:flex;justify-content:space-between;gap:16px}
+.tv{font-weight:700;color:#1a5a8c}
+</style>
+</head>
+<body>
+<div id="wrap">
+
+  <div id="head">
+    <div>
+      <div id="ttl">ERÜ Fen ve Mühendislik Bilimleri — Birim Bazlı Yetkinlik Analizi <span id="yrdisp" style="font-weight:300;color:#6a8fa8;font-size:15px">2023</span></div>
+      <div id="sub">Anabilim dalı / bölüm bazında araştırma kapasitesi, kalitesi ve işbirliği</div>
+    </div>
+    <div id="src">Kaynak: Erciyes Üniversitesi<br>Kurumsal Araştırma Veri Tabanı<br>2023 – 2025</div>
+  </div>
+
+  <div id="facfilter"></div>
+
+  <div id="chartbox">
+    <svg id="gs" role="img" aria-label="ERÜ fen ve mühendislik bilimleri birim bazlı yetkinlik analizi animasyonlu bubble chart"></svg>
+    <div id="tt"></div>
+  </div>
+
+  <div id="ctrl">
+    <button id="pbtn" onclick="gPlay()" title="Oynat / Duraklat">
+      <svg viewBox="0 0 12 12"><path id="ppath" d="M2 1.5l9 4.5-9 4.5z"/></svg>
+    </button>
+    <div id="tlwrap">
+      <div id="tl" onclick="gSeek(event)"><div id="tlf"></div></div>
+      <div class="ticks">
+        <span class="tick on" onclick="gJump(0)">2023</span>
+        <span class="tick"    onclick="gJump(1)">2024</span>
+        <span class="tick"    onclick="gJump(2)">2025</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>const YEARS=[2023,2024,2025];
+const FACULTIES=["Fen Fakültesi", "Mühendislik Fakültesi", "Mimarlık Fakültesi", "Ziraat Fakültesi", "Havacılık ve Uzay Bilimleri Fakültesi"];
+const FAC_COLORS={"Fen Fakültesi": "#3a7ab8", "Mühendislik Fakültesi": "#e8923a", "Mimarlık Fakültesi": "#20a870", "Ziraat Fakültesi": "#a8731a", "Havacılık ve Uzay Bilimleri Fakültesi": "#7050c8"};
+const DEPTS=[{"id": "Astronomi ve Uzay Bilimleri", "s": "ASTRONOMİ VE UZAY BİLİMLERİ", "f": "Fen Fakültesi"}, {"id": "Bahçe Bitkileri", "s": "BAHÇE BİTKİLERİ", "f": "Ziraat Fakültesi"}, {"id": "Bilgisayar Mühendisliği", "s": "BİLGİSAYAR MÜHENDİSLİĞİ", "f": "Mühendislik Fakültesi"}, {"id": "Bitki Koruma", "s": "BİTKİ KORUMA", "f": "Ziraat Fakültesi"}, {"id": "Biyoloji", "s": "BİYOLOJİ", "f": "Fen Fakültesi"}, {"id": "Biyomedikal Mühendisliği", "s": "BİYOMEDİKAL MÜHENDİSLİĞİ", "f": "Mühendislik Fakültesi"}, {"id": "Biyosistem Mühendisliği", "s": "BİYOSİSTEM MÜHENDİSLİĞİ", "f": "Ziraat Fakültesi"}, {"id": "Elektrik-Elektronik Mühendisliği", "s": "ELEKTRİK-ELEKTRONİK MÜHENDİSLİĞİ", "f": "Mühendislik Fakültesi"}, {"id": "Endüstri Mühendisliği", "s": "ENDÜSTRİ MÜHENDİSLİĞİ", "f": "Mühendislik Fakültesi"}, {"id": "Endüstriyel Tasarım Mühendisliği", "s": "ENDÜSTRİYEL TASARIM MÜHENDİSLİĞİ", "f": "Mühendislik Fakültesi"}, {"id": "Enerji Sistemleri Mühendisliği", "s": "ENERJİ SİSTEMLERİ MÜHENDİSLİĞİ", "f": "Mühendislik Fakültesi"}, {"id": "Fizik", "s": "FİZİK", "f": "Fen Fakültesi"}, {"id": "Gıda Mühendisliği", "s": "GIDA MÜHENDİSLİĞİ", "f": "Mühendislik Fakültesi"}, {"id": "Harita Mühendisliği", "s": "HARİTA MÜHENDİSLİĞİ", "f": "Mühendislik Fakültesi"}, {"id": "Havacılık Elektrik ve Elektroniği", "s": "HAVACILIK ELEKTRİK VE ELEKTRONİĞİ", "f": "Havacılık ve Uzay Bilimleri Fakültesi"}, {"id": "Havacılık Yönetimi", "s": "HAVACILIK YÖNETİMİ", "f": "Havacılık ve Uzay Bilimleri Fakültesi"}, {"id": "Kimya", "s": "KİMYA", "f": "Fen Fakültesi"}, {"id": "Makine Mühendisliği", "s": "MAKİNE MÜHENDİSLİĞİ", "f": "Mühendislik Fakültesi"}, {"id": "Matematik", "s": "MATEMATİK", "f": "Fen Fakültesi"}, {"id": "Mekatronik Mühendisliği", "s": "MEKATRONİK MÜHENDİSLİĞİ", "f": "Mühendislik Fakültesi"}, {"id": "Metalurji ve Malzeme Mühendisliği", "s": "METALURJİ VE MALZEME MÜHENDİSLİĞİ", "f": "Mühendislik Fakültesi"}, {"id": "Mimarlık", "s": "MİMARLIK", "f": "Mimarlık Fakültesi"}, {"id": "Tarla Bitkileri", "s": "TARLA BİTKİLERİ", "f": "Ziraat Fakültesi"}, {"id": "Tarımsal Biyoteknoloji", "s": "TARIMSAL BİYOTEKNOLOJİ", "f": "Ziraat Fakültesi"}, {"id": "Tekstil Mühendisliği", "s": "TEKSTİL MÜHENDİSLİĞİ", "f": "Mühendislik Fakültesi"}, {"id": "Toprak Bilimi ve Bitki Besleme", "s": "TOPRAK BİLİMİ VE BİTKİ BESLEME", "f": "Ziraat Fakültesi"}, {"id": "Uzay Mühendisliği", "s": "UZAY MÜHENDİSLİĞİ", "f": "Havacılık ve Uzay Bilimleri Fakültesi"}, {"id": "Uçak Gövde ve Motor Bakımı", "s": "UÇAK GÖVDE VE MOTOR BAKIMI", "f": "Havacılık ve Uzay Bilimleri Fakültesi"}, {"id": "Uçak Mühendisliği", "s": "UÇAK MÜHENDİSLİĞİ", "f": "Havacılık ve Uzay Bilimleri Fakültesi"}, {"id": "Yazılım Mühendisliği", "s": "YAZILIM MÜHENDİSLİĞİ", "f": "Mühendislik Fakültesi"}, {"id": "Zootekni", "s": "ZOOTEKNİ", "f": "Ziraat Fakültesi"}, {"id": "Çevre Mühendisliği", "s": "ÇEVRE MÜHENDİSLİĞİ", "f": "Mühendislik Fakültesi"}, {"id": "İnşaat Mühendisliği", "s": "İNŞAAT MÜHENDİSLİĞİ", "f": "Mühendislik Fakültesi"}, {"id": "Şehir ve Bölge Planlama", "s": "ŞEHİR VE BÖLGE PLANLAMA", "f": "Mimarlık Fakültesi"}];
+const SCORES={"2023": {"Uçak Gövde ve Motor Bakımı": [62.815, 40.693, 45.988], "Şehir ve Bölge Planlama": [29.482, 30.533, 7.117], "Havacılık Elektrik ve Elektroniği": [37.134, 24.034, 8.346], "Gıda Mühendisliği": [62.882, 50.349, 32.15], "Endüstri Mühendisliği": [56.3, 46.678, 23.29], "Tekstil Mühendisliği": [76.196, 60.383, 39.922], "Mekatronik Mühendisliği": [58.105, 47.62, 20.24], "Toprak Bilimi ve Bitki Besleme": [71.592, 52.695, 18.806], "Elektrik-Elektronik Mühendisliği": [63.94, 59.608, 53.479], "Makine Mühendisliği": [61.797, 69.584, 41.969], "Metalurji ve Malzeme Mühendisliği": [93.643, 85.153, 50.241], "Uzay Mühendisliği": [42.145, 42.958, 11.925], "Harita Mühendisliği": [35.158, 42.367, 8.758], "Havacılık Yönetimi": [41.064, 36.711, 30.855], "Bahçe Bitkileri": [76.45, 79.235, 46.155], "Yazılım Mühendisliği": [27.052, 33.676, 19.677], "Biyosistem Mühendisliği": [60.468, 57.469, 37.625], "Astronomi ve Uzay Bilimleri": [48.861, 52.592, 26.864], "Enerji Sistemleri Mühendisliği": [82.043, 77.179, 51.174], "Biyoloji": [68.885, 72.639, 51.952], "Matematik": [53.428, 64.524, 19.708], "Uçak Mühendisliği": [49.58, 69.529, 49.853], "Biyomedikal Mühendisliği": [90.097, 86.296, 35.124], "Çevre Mühendisliği": [68.535, 61.128, 38.733], "Kimya": [96.704, 79.058, 56.517], "Zootekni": [62.886, 45.175, 25.916], "İnşaat Mühendisliği": [69.768, 68.105, 12.117], "Mimarlık": [43.537, 39.7, 14.777], "Tarla Bitkileri": [61.626, 60.05, 11.251], "Tarımsal Biyoteknoloji": [75.217, 73.547, 75.984], "Bilgisayar Mühendisliği": [76.97, 74.484, 49.124], "Bitki Koruma": [57.753, 65.485, 27.238], "Fizik": [78.858, 88.383, 45], "Endüstriyel Tasarım Mühendisliği": [49.453, 41.907, 25.688]}, "2024": {"Uçak Gövde ve Motor Bakımı": [69.8, 48.581, 30.708], "Şehir ve Bölge Planlama": [18.283, 12.884, 6.912], "Havacılık Elektrik ve Elektroniği": [43.117, 40.606, 8.827], "Gıda Mühendisliği": [60.87, 53.795, 20.727], "Endüstri Mühendisliği": [52.841, 47.687, 21.812], "Tekstil Mühendisliği": [68.321, 54.207, 47.826], "Mekatronik Mühendisliği": [56.904, 50.804, 21.641], "Toprak Bilimi ve Bitki Besleme": [61.942, 56.757, 32.125], "Elektrik-Elektronik Mühendisliği": [61.539, 62.288, 39.477], "Makine Mühendisliği": [53.239, 61.873, 32.316], "Metalurji ve Malzeme Mühendisliği": [85.529, 72.97, 36.072], "Uzay Mühendisliği": [36.999, 50.569, 21.083], "Harita Mühendisliği": [30.465, 43.472, 18.198], "Havacılık Yönetimi": [37.122, 28.167, 24.476], "Bahçe Bitkileri": [75.891, 69.6, 52.573], "Yazılım Mühendisliği": [47.155, 47.95, 40.908], "Biyosistem Mühendisliği": [62.141, 62.551, 42.581], "Astronomi ve Uzay Bilimleri": [47.506, 44.194, 23.16], "Enerji Sistemleri Mühendisliği": [84.024, 52.159, 49.224], "Biyoloji": [55.064, 53.537, 35.881], "Matematik": [31.345, 51.269, 18.446], "Uçak Mühendisliği": [59.458, 63.351, 38.806], "Biyomedikal Mühendisliği": [88.001, 83.017, 41.388], "Çevre Mühendisliği": [60.395, 44.337, 28.886], "Kimya": [94.476, 82.061, 60.526], "Zootekni": [67.413, 65.049, 36.807], "İnşaat Mühendisliği": [64.766, 61.124, 19.708], "Mimarlık": [15.983, 34.216, 7.741], "Tarla Bitkileri": [56.82, 66.395, 24.515], "Tarımsal Biyoteknoloji": [80.141, 63.1, 57.889], "Bilgisayar Mühendisliği": [63.833, 71.272, 25.345], "Bitki Koruma": [47.6, 50.943, 11.019], "Fizik": [86.251, 86.617, 65], "Endüstriyel Tasarım Mühendisliği": [41.611, 58.335, 37.563]}, "2025": {"Uçak Gövde ve Motor Bakımı": [65.865, 46.138, 32.222], "Şehir ve Bölge Planlama": [17.701, 14.236, 7.5], "Havacılık Elektrik ve Elektroniği": [32.4, 51.002, 10.596], "Gıda Mühendisliği": [52.995, 68.019, 20.735], "Endüstri Mühendisliği": [51.886, 57.786, 40.19], "Tekstil Mühendisliği": [50.39, 53.733, 39.666], "Mekatronik Mühendisliği": [63.901, 63.535, 34.334], "Toprak Bilimi ve Bitki Besleme": [58.873, 61.182, 26.279], "Elektrik-Elektronik Mühendisliği": [63.62, 66.313, 49.362], "Makine Mühendisliği": [54.154, 71.065, 43.316], "Metalurji ve Malzeme Mühendisliği": [92.287, 74.648, 36.952], "Uzay Mühendisliği": [32.211, 39.943, 30.58], "Harita Mühendisliği": [35.465, 53.873, 21.477], "Havacılık Yönetimi": [35.846, 15.844, 18.425], "Bahçe Bitkileri": [84.055, 84.665, 70.467], "Yazılım Mühendisliği": [43.064, 55.381, 20.508], "Biyosistem Mühendisliği": [46.42, 49.964, 41.601], "Astronomi ve Uzay Bilimleri": [54.626, 55.351, 24.461], "Enerji Sistemleri Mühendisliği": [82.28, 76.942, 56.258], "Biyoloji": [59.188, 64.927, 36.197], "Matematik": [32.332, 59.691, 16.449], "Uçak Mühendisliği": [65.532, 67.905, 56.336], "Biyomedikal Mühendisliği": [87.758, 82.821, 44.356], "Çevre Mühendisliği": [36.462, 50.22, 20.21], "Kimya": [97.869, 93.165, 67.501], "Zootekni": [71.7, 72.272, 31.193], "İnşaat Mühendisliği": [47.194, 69.657, 33.519], "Mimarlık": [35.831, 45.202, 14.082], "Tarla Bitkileri": [54.716, 69.124, 42.121], "Tarımsal Biyoteknoloji": [69.639, 81.727, 63.812], "Bilgisayar Mühendisliği": [56.136, 74.788, 46.09], "Bitki Koruma": [50.518, 56.447, 38.371], "Fizik": [87.034, 93.831, 57.506], "Endüstriyel Tasarım Mühendisliği": [51.883, 54.617, 32.88]}};
+const NS='http://www.w3.org/2000/svg';
+
+/* ── LAYOUT ── */
+const PAD={t:36,r:160,b:54,l:50};
+const XD=[0,100], YD=[0,100];
+let W,H,svg;
+let activeFacs=new Set(FACULTIES); // all on by default
+
+function xp(v){return PAD.l+(v-XD[0])/(XD[1]-XD[0])*(W-PAD.l-PAD.r);}
+function yp(v){return H-PAD.b-(v-YD[0])/(YD[1]-YD[0])*(H-PAD.t-PAD.b);}
+
+/* bubble radius: sqrt scale on işbirliği score (0-100ish) */
+function rs(isb){
+  const mn=0,mx=80;
+  const t=Math.max(0,Math.min(1,(isb-mn)/(mx-mn)));
+  return 4+Math.sqrt(t)*22;
+}
+function lfs(r){return Math.max(7.5,Math.min(11.5,r*0.42+6));}
+
+function lerp(a,b,t){return a+(b-a)*t;}
+function ease(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;}
+function mk(tag,a={}){const e=document.createElementNS(NS,tag);Object.entries(a).forEach(([k,v])=>e.setAttribute(k,v));return e;}
+
+function hexA(hex,a){
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+function lighten(hex,amt){
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  const lr=Math.min(255,Math.round(r+(255-r)*amt));
+  const lg=Math.min(255,Math.round(g+(255-g)*amt));
+  const lb=Math.min(255,Math.round(b+(255-b)*amt));
+  return `rgb(${lr},${lg},${lb})`;
+}
+
+function init(){
+  const wrap=document.getElementById('chartbox');
+  W=wrap.offsetWidth||900; H=Math.round(W*0.78);
+  svg=document.getElementById('gs');
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.setAttribute('height',H);
+  svg.innerHTML='';
+
+  const defs=mk('defs');
+  Object.entries(FAC_COLORS).forEach(([fac,col])=>{
+    const gid='rg_'+fac.replace(/[^a-zA-Z0-9]/g,'_');
+    const rg=mk('radialGradient',{id:gid,cx:'35%',cy:'30%',r:'65%'});
+    const s0=mk('stop',{offset:'0%'}); s0.setAttribute('stop-color',lighten(col,0.45));
+    const s1=mk('stop',{offset:'100%'}); s1.setAttribute('stop-color',col);
+    rg.appendChild(s0);rg.appendChild(s1);defs.appendChild(rg);
+  });
+  svg.appendChild(defs);
+
+  /* watermark year */
+  const wm=mk('text',{id:'gwm',x:W-PAD.r+50,y:H-PAD.b-6,
+    'text-anchor':'end','font-size':Math.round(H*0.26),'font-weight':'700',
+    'font-family':"'Open Sans',sans-serif",fill:'rgba(26,58,82,0.05)'});
+  wm.textContent='2023'; svg.appendChild(wm);
+
+  /* grid + 50/50 quadrant lines (template style) */
+  const gg=mk('g',{id:'gg'});
+  [25,50,75,100].forEach(v=>{
+    const isMid=(v===50);
+    gg.appendChild(mk('line',{x1:xp(0),x2:xp(100),y1:yp(v),y2:yp(v),
+      stroke:isMid?'#888':'#e8edf2','stroke-width':isMid?'1.3':'1'}));
+    gg.appendChild(mk('line',{x1:xp(v),x2:xp(v),y1:yp(0),y2:yp(100),
+      stroke:isMid?'#888':'#e8edf2','stroke-width':isMid?'1.3':'1'}));
+    const tx=mk('text',{x:xp(v),y:H-PAD.b+16,'text-anchor':'middle',
+      fill:'#9aa','font-size':'10.5','font-family':"'Open Sans',sans-serif"});
+    tx.textContent=v; gg.appendChild(tx);
+    const ty=mk('text',{x:PAD.l-8,y:yp(v),'text-anchor':'end','dominant-baseline':'middle',
+      fill:'#9aa','font-size':'10.5','font-family':"'Open Sans',sans-serif"});
+    ty.textContent=v; gg.appendChild(ty);
+  });
+  gg.appendChild(mk('line',{x1:xp(0),x2:xp(0),y1:yp(0),y2:yp(100),stroke:'#888','stroke-width':'1.3'}));
+  gg.appendChild(mk('line',{x1:xp(0),x2:xp(100),y1:yp(0),y2:yp(0),stroke:'#888','stroke-width':'1.3'}));
+
+  /* axis titles */
+  const at1=mk('text',{fill:'#445','font-family':"'Open Sans',sans-serif",'font-weight':'700','font-size':'12.5',
+    x:(PAD.l+W-PAD.r)/2,y:H-12,'text-anchor':'middle'});
+  at1.textContent='Araştırma Kapasitesi'; gg.appendChild(at1);
+  const at2=mk('text',{fill:'#445','font-family':"'Open Sans',sans-serif",'font-weight':'700','font-size':'12.5',
+    transform:'rotate(-90)',x:-((PAD.t+H-PAD.b)/2),y:16,'text-anchor':'middle'});
+  at2.textContent='Araştırma Kalitesi'; gg.appendChild(at2);
+
+  svg.appendChild(gg);
+  svg.appendChild(mk('g',{id:'gb'}));
+  svg.appendChild(mk('g',{id:'gl'}));
+
+  /* legend (right side, fixed) */
+  const leg=mk('g',{id:'glegend'});
+  const lx0=W-PAD.r+30;
+  FACULTIES.forEach((fac,i)=>{
+    const ly=PAD.t+10+i*22;
+    const dot=mk('circle',{cx:lx0+6,cy:ly,r:6,fill:FAC_COLORS[fac],opacity:'0.85'});
+    leg.appendChild(dot);
+    const t=mk('text',{x:lx0+18,y:ly,'dominant-baseline':'middle',
+      'font-size':'9','font-family':"'Open Sans',sans-serif",fill:'#445'});
+    t.textContent=fac.replace(' FAKÜLTESİ',''); leg.appendChild(t);
+  });
+  // size legend
+  const szY=PAD.t+10+FACULTIES.length*22+24;
+  const szT=mk('text',{x:lx0,y:szY,'font-size':'9','font-weight':'700',
+    'font-family':"'Open Sans',sans-serif",fill:'#445'});
+  szT.textContent='Araştırma İşbirliği'; leg.appendChild(szT);
+  [10,40,70].forEach((v,i)=>{
+    const r=rs(v);
+    const cy=szY+22+i*26;
+    leg.appendChild(mk('circle',{cx:lx0+14,cy,r,fill:'none',stroke:'#999','stroke-width':'1'}));
+    const t=mk('text',{x:lx0+38,y:cy,'dominant-baseline':'middle','font-size':'9',
+      'font-family':"'Open Sans',sans-serif",fill:'#778'});
+    t.textContent=v; leg.appendChild(t);
+  });
+  svg.appendChild(leg);
+}
+
+/* ── RENDER FRAME ── */
+function frame(fy,ty,t){
+  document.getElementById('gwm').textContent=ty;
+  document.getElementById('yrdisp').textContent=ty;
+
+  const fromS=SCORES[String(fy)]||{}, toS=SCORES[String(ty)]||{};
+
+  const pts=DEPTS.map(d=>{
+    const f=fromS[d.id], to=toS[d.id];
+    if(!f && !to) return null; // never present in either year shown
+    let alpha=1;
+    let useF=f, useTo=to;
+    if(f && !to){ // disappears after fy: fade out
+      useTo=f; alpha=1-ease(t);
+    } else if(!f && to){ // appears at ty: fade in
+      useF=to; alpha=ease(t);
+    }
+    return {
+      id:d.id, s:d.s, fac:d.f, alpha,
+      cx:lerp(useF[0],useTo[0],t),
+      cy:lerp(useF[1],useTo[1],t),
+      rv:lerp(useF[2],useTo[2],t),
+    };
+  }).filter(p=>p && p.alpha>0.04 && activeFacs.has(p.fac))
+    .sort((a,b)=>b.rv-a.rv);
+
+  const gb=document.getElementById('gb'), gl=document.getElementById('gl');
+  gb.innerHTML=''; gl.innerHTML='';
+
+  pts.forEach(p=>{
+    const cx=xp(p.cx), cy=yp(p.cy), r=rs(p.rv);
+    const col=FAC_COLORS[p.fac]||'#888';
+    const gid='rg_'+p.fac.replace(/[^a-zA-Z0-9]/g,'_');
+
+    const c=mk('circle',{cx,cy,r,fill:`url(#${gid})`,stroke:col,'stroke-width':'1','opacity':(0.88*p.alpha).toFixed(3)});
+    c.style.cursor='pointer';
+    c.addEventListener('mouseenter',ev=>{c.setAttribute('stroke-width','2.2');showTip(ev,p,ty);});
+    c.addEventListener('mouseleave',()=>{c.setAttribute('stroke-width','1');document.getElementById('tt').style.display='none';});
+    c.addEventListener('mousemove',ev=>showTip(ev,p,ty));
+    gb.appendChild(c);
+
+    /* label outside, leader line, font size scaled by bubble */
+    const fs=lfs(r);
+    const lbl=p.s;
+    let lx=cx, ly=cy-r-5, anchor='middle';
+    if(ly-fs<yp(100)+4) ly=cy+r+fs+3;
+    const approxW=lbl.length*fs*0.50;
+    if(lx-approxW/2<PAD.l+2) anchor='start';
+    if(lx+approxW/2>W-PAD.r-2) anchor='end';
+
+    const lineY2=ly>cy?cy+r:cy-r;
+    gl.appendChild(mk('line',{x1:cx,y1:ly+(ly>cy?-2:2),x2:cx,y2:lineY2+(ly>cy?3:-3),
+      stroke:col,'stroke-width':'0.6','stroke-dasharray':'2 2',opacity:(0.4*p.alpha).toFixed(3)}));
+
+    const txt=mk('text',{x:lx,y:ly,'text-anchor':anchor,'dominant-baseline':'auto',
+      class:'blab','font-size':fs,'font-weight':r>=14?'600':'400',
+      fill:col,opacity:p.alpha.toFixed(3)});
+    txt.textContent=lbl; gl.appendChild(txt);
+  });
+}
+
+const FULL_BY_ID={};
+DEPTS.forEach(d=>{FULL_BY_ID[d.id]=d.id.replace(/^(.*)$/,m=>m);});
+
+function showTip(ev,p,yr){
+  const tip=document.getElementById('tt');
+  const fullName=p.id.charAt(0)+p.id.slice(1).toLowerCase();
+  tip.innerHTML=`<strong>${p.id}</strong><span class="tc">${p.fac.replace(' FAKÜLTESİ','')} · ${yr}</span>
+    <div class="tr"><span>Kapasite</span><span class="tv">${p.cx.toFixed(2)}</span></div>
+    <div class="tr"><span>Kalite</span><span class="tv">${p.cy.toFixed(2)}</span></div>
+    <div class="tr"><span>İşbirliği</span><span class="tv">${p.rv.toFixed(2)}</span></div>`;
+  tip.style.display='block';
+  let l=ev.clientX+14, t=ev.clientY-10;
+  if(l+200>window.innerWidth-4) l=ev.clientX-210;
+  if(t+110>window.innerHeight-4) t=ev.clientY-115;
+  tip.style.left=l+'px'; tip.style.top=t+'px';
+}
+
+/* ── FACULTY FILTER UI ── */
+function buildFacFilter(){
+  const c=document.getElementById('facfilter');
+  c.innerHTML='';
+  const allBtn=document.createElement('button');
+  allBtn.id='allbtn'; allBtn.textContent='Tümü';
+  allBtn.onclick=()=>{activeFacs=new Set(FACULTIES);renderFacButtons();renderAll(curIdx,1);};
+  c.appendChild(allBtn);
+
+  FACULTIES.forEach(fac=>{
+    const btn=document.createElement('button');
+    btn.className='facbtn';
+    btn.dataset.fac=fac;
+    btn.innerHTML=`<span class="dot" style="background:${FAC_COLORS[fac]}"></span>${fac.replace(' FAKÜLTESİ','')}`;
+    btn.onclick=()=>{
+      if(activeFacs.has(fac) && activeFacs.size===1){
+        activeFacs=new Set(FACULTIES);
+      } else if(activeFacs.size===FACULTIES.length){
+        activeFacs=new Set([fac]);
+      } else if(activeFacs.has(fac)){
+        activeFacs.delete(fac);
+      } else {
+        activeFacs.add(fac);
+      }
+      renderFacButtons();
+      renderAll(curIdx,1);
+    };
+    c.appendChild(btn);
+  });
+  renderFacButtons();
+}
+function renderFacButtons(){
+  document.querySelectorAll('.facbtn').forEach(b=>{
+    const fac=b.dataset.fac;
+    const on=activeFacs.has(fac);
+    b.classList.toggle('on',on && activeFacs.size<FACULTIES.length);
+    b.classList.toggle('dim',!on);
+    b.style.background=on?FAC_COLORS[fac]:'#fff';
+    b.style.borderColor=FAC_COLORS[fac];
+    b.style.color=on?'#fff':'#888';
+  });
+}
+
+/* ── ANIMATION ── */
+let curIdx=0, playing=false, af=null, as2=null;
+const DUR=1700;
+
+function renderAll(i,t=1){
+  curIdx=i;
+  const fy=i===0?YEARS[0]:YEARS[i-1];
+  frame(fy,YEARS[i],t);
+  document.getElementById('tlf').style.width=((i/(YEARS.length-1))*100)+'%';
+  document.querySelectorAll('.tick').forEach((e,j)=>e.classList.toggle('on',j===i));
+}
+
+window.gJump=i=>{stop2();renderAll(i,1);};
+window.gSeek=ev=>{
+  const tl=document.getElementById('tl');
+  const br=tl.getBoundingClientRect();
+  const t=Math.max(0,Math.min(1,(ev.clientX-br.left)/br.width));
+  const raw=t*(YEARS.length-1);
+  const i=Math.min(Math.floor(raw),YEARS.length-2);
+  const frac=raw-i;
+  stop2(); curIdx=i+(frac>.5?1:0);
+  frame(YEARS[i],YEARS[Math.min(i+1,YEARS.length-1)],frac);
+  document.getElementById('tlf').style.width=(t*100)+'%';
+  document.querySelectorAll('.tick').forEach((e,j)=>e.classList.toggle('on',j===curIdx));
+};
+window.gPlay=()=>{
+  if(playing){stop2();return;}
+  if(curIdx>=YEARS.length-1)curIdx=0;
+  playing=true;
+  document.getElementById('ppath').setAttribute('d','M3 2h2v8H3zM7 2h2v8H7z');
+  next2();
+};
+function stop2(){
+  playing=false;
+  if(af){cancelAnimationFrame(af);af=null;}
+  document.getElementById('ppath').setAttribute('d','M2 1.5l9 4.5-9 4.5z');
+}
+function next2(){
+  if(!playing)return;
+  const ni=curIdx+1;
+  if(ni>=YEARS.length){stop2();renderAll(YEARS.length-1,1);return;}
+  const fy=YEARS[curIdx]; as2=null;
+  document.querySelectorAll('.tick').forEach((e,j)=>e.classList.toggle('on',j===ni));
+  function step(ts){
+    if(!playing)return;
+    if(!as2)as2=ts;
+    const raw=Math.min((ts-as2)/DUR,1);
+    const t=ease(raw);
+    curIdx=ni;
+    document.getElementById('tlf').style.width=(((ni-1+raw)/(YEARS.length-1))*100)+'%';
+    frame(fy,YEARS[ni],t);
+    if(raw<1){af=requestAnimationFrame(step);}
+    else{setTimeout(()=>{if(playing&&ni<YEARS.length-1)next2();else stop2();},1000);}
+  }
+  af=requestAnimationFrame(step);
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  buildFacFilter();
+  init();
+  renderAll(0,1);
+});
+window.addEventListener('resize',()=>{
+  init();
+  renderAll(curIdx,1);
+});
+</script>
+</body>
+</html>

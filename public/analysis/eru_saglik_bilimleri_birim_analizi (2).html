@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ERÜ Sağlık ve Yaşam Bilimleri — Birim Bazlı Yetkinlik Analizi 2023–2025</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#f0f4f8;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:20px;font-family:'Open Sans',sans-serif}
+#wrap{background:#fff;padding:24px 22px 18px;border:1px solid #d4e2ec;border-radius:8px;width:100%;max-width:1180px;box-shadow:0 4px 24px rgba(0,40,80,0.08)}
+
+/* HEADER */
+#head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+#ttl{font-size:18px;font-weight:700;color:#1a3a52;letter-spacing:-0.2px;line-height:1.3}
+#sub{font-size:10.5px;color:#8ab0c8;margin-top:3px}
+#src{font-size:9.5px;color:#8ab0c8;text-align:right;line-height:1.7}
+
+/* FACULTY FILTER */
+#facfilter{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 10px}
+.facbtn{padding:5px 12px;border:1.5px solid #ddd;border-radius:20px;background:#fff;cursor:pointer;font-size:10px;font-weight:600;color:#888;font-family:'Open Sans',sans-serif;transition:all .15s;display:flex;align-items:center;gap:5px}
+.facbtn .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.facbtn.on{color:#fff}
+.facbtn.dim{opacity:0.35}
+#allbtn{padding:5px 12px;border:1.5px solid #1a3a52;border-radius:20px;background:#1a3a52;color:#fff;cursor:pointer;font-size:10px;font-weight:700;font-family:'Open Sans',sans-serif}
+
+/* CHART */
+#chartbox{position:relative;width:100%;background:#fff}
+svg#gs{display:block;width:100%}
+.blab{font-family:'Open Sans',sans-serif;pointer-events:none}
+
+/* CONTROLS */
+#ctrl{display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap}
+#pbtn{width:36px;height:36px;border-radius:50%;border:2px solid #1a3a52;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
+#pbtn:hover{background:#eef2f6}
+#pbtn svg{width:12px;height:12px;fill:#1a3a52}
+#tlwrap{flex:1;min-width:180px}
+#tl{height:5px;background:#e4e8ec;border-radius:3px;cursor:pointer}
+#tlf{height:100%;background:#1a3a52;border-radius:3px;width:0%;transition:width .05s}
+.ticks{display:flex;justify-content:space-between;margin-top:6px}
+.tick{font-size:11px;color:#aab;cursor:pointer;padding:2px 6px;border-radius:4px;user-select:none;font-weight:600;transition:color .15s}
+.tick.on{color:#1a3a52}
+.tick:hover{color:#1a3a52}
+
+/* TOOLTIP */
+#tt{position:fixed;background:#fff;border:1px solid #c0d0dc;border-radius:8px;padding:10px 14px;font-size:11px;line-height:1.85;pointer-events:none;display:none;z-index:999;color:#3a5060;min-width:190px;box-shadow:0 4px 16px rgba(0,30,60,0.14)}
+#tt strong{color:#1a3a52;font-size:12.5px;display:block;margin-bottom:2px}
+#tt .tc{font-size:9px;color:#aab;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;display:block}
+.tr{display:flex;justify-content:space-between;gap:16px}
+.tv{font-weight:700;color:#1a5a8c}
+</style>
+</head>
+<body>
+<div id="wrap">
+
+  <div id="head">
+    <div>
+      <div id="ttl">ERÜ Sağlık ve Yaşam Bilimleri — Birim Bazlı Yetkinlik Analizi <span id="yrdisp" style="font-weight:300;color:#6a8fa8;font-size:15px">2023</span></div>
+      <div id="sub">Anabilim dalı / bölüm bazında araştırma kapasitesi, kalitesi ve işbirliği</div>
+    </div>
+    <div id="src">Kaynak: Erciyes Üniversitesi<br>Kurumsal Araştırma Veri Tabanı<br>2023 – 2025</div>
+  </div>
+
+  <div id="facfilter"></div>
+
+  <div id="chartbox">
+    <svg id="gs" role="img" aria-label="ERÜ sağlık ve yaşam bilimleri birim bazlı yetkinlik analizi animasyonlu bubble chart"></svg>
+    <div id="tt"></div>
+  </div>
+
+  <div id="ctrl">
+    <button id="pbtn" onclick="gPlay()" title="Oynat / Duraklat">
+      <svg viewBox="0 0 12 12"><path id="ppath" d="M2 1.5l9 4.5-9 4.5z"/></svg>
+    </button>
+    <div id="tlwrap">
+      <div id="tl" onclick="gSeek(event)"><div id="tlf"></div></div>
+      <div class="ticks">
+        <span class="tick on" onclick="gJump(0)">2023</span>
+        <span class="tick"    onclick="gJump(1)">2024</span>
+        <span class="tick"    onclick="gJump(2)">2025</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>const YEARS=[2023,2024,2025];
+const FACULTIES=["Tıp Fakültesi", "Diş Hekimliği Fakültesi", "Eczacılık Fakültesi", "Sağlık Bilimleri Fakültesi", "Spor Bilimleri Fakültesi", "Veteriner Fakültesi"];
+const FAC_COLORS={"Tıp Fakültesi": "#3a7ab8", "Diş Hekimliği Fakültesi": "#e85a5a", "Eczacılık Fakültesi": "#b8941a", "Sağlık Bilimleri Fakültesi": "#20a870", "Spor Bilimleri Fakültesi": "#1ab8b0", "Veteriner Fakültesi": "#d040c0"};
+const DEPTS=[{"id": "ACİL TIP", "s": "ACİL TIP", "f": "Tıp Fakültesi"}, {"id": "ADLİ TIP", "s": "ADLİ TIP", "f": "Tıp Fakültesi"}, {"id": "ANALİTİK KİMYA", "s": "ANALİTİK KİMYA", "f": "Eczacılık Fakültesi"}, {"id": "ANATOMİ", "s": "ANATOMİ", "f": "Tıp Fakültesi"}, {"id": "ANESTEZİYOLOJİ VE REANİMASYON", "s": "ANESTEZİYOLOJİ VE REANİMASYON", "f": "Tıp Fakültesi"}, {"id": "ANTRENÖRLÜK EĞİTİMİ", "s": "ANTRENÖRLÜK EĞİTİMİ", "f": "Spor Bilimleri Fakültesi"}, {"id": "AĞIZ, DİŞ VE ÇENE CERRAHİSİ", "s": "AĞIZ, DİŞ VE ÇENE CERRAHİSİ", "f": "Diş Hekimliği Fakültesi"}, {"id": "AĞIZ, DİŞ VE ÇENE RADYOLOJİSİ", "s": "AĞIZ, DİŞ VE ÇENE RADYOLOJİSİ", "f": "Diş Hekimliği Fakültesi"}, {"id": "AİLE HEKİMLİĞİ", "s": "AİLE HEKİMLİĞİ", "f": "Tıp Fakültesi"}, {"id": "BEDEN EĞİTİMİ VE SPOR", "s": "BEDEN EĞİTİMİ VE SPOR", "f": "Spor Bilimleri Fakültesi"}, {"id": "BESLENME VE DİYETETİK", "s": "BESLENME VE DİYETETİK", "f": "Sağlık Bilimleri Fakültesi"}, {"id": "BEYİN VE SİNİR CERRAHİSİ", "s": "BEYİN VE SİNİR CERRAHİSİ", "f": "Tıp Fakültesi"}, {"id": "BİYOFİZİK", "s": "BİYOFİZİK", "f": "Tıp Fakültesi"}, {"id": "BİYOKİMYA", "s": "BİYOKİMYA", "f": "Eczacılık Fakültesi"}, {"id": "BİYOİSTATİSTİK", "s": "BİYOİSTATİSTİK", "f": "Tıp Fakültesi"}, {"id": "DERİ VE ZÜHREVİ HASTALIKLAR", "s": "DERİ VE ZÜHREVİ HASTALIKLAR", "f": "Tıp Fakültesi"}, {"id": "DERİ VE ZÜHREVİ HASTALIKLARI", "s": "DERİ VE ZÜHREVİ HASTALIKLARI", "f": "Tıp Fakültesi"}, {"id": "DÖLERME VE SUNİ TOHUMLAMA", "s": "DÖLERME VE SUNİ TOHUMLAMA", "f": "Veteriner Fakültesi"}, {"id": "DİL VE KONUŞMA TERAPİSİ", "s": "DİL VE KONUŞMA TERAPİSİ", "f": "Sağlık Bilimleri Fakültesi"}, {"id": "ECZACILIK MESLEK BİLİMLERİ", "s": "ECZACILIK MESLEK BİLİMLERİ", "f": "Eczacılık Fakültesi"}, {"id": "ECZACILIK TARİHİ VE ETİK", "s": "ECZACILIK TARİHİ VE ETİK", "f": "Eczacılık Fakültesi"}, {"id": "ECZACILIK TEKNOLOJİSİ", "s": "ECZACILIK TEKNOLOJİSİ", "f": "Eczacılık Fakültesi"}, {"id": "ECZACILIK TEMEL BİLİMLERİ", "s": "ECZACILIK TEMEL BİLİMLERİ", "f": "Eczacılık Fakültesi"}, {"id": "ENDODONTİ", "s": "ENDODONTİ", "f": "Diş Hekimliği Fakültesi"}, {"id": "ENFEKSİYON HASTALIKLARI VE KLİNİK MİKROBİYOLOJİ", "s": "ENFEKSİYON HASTALIKLARI VE KLİNİK MİKROBİYOLOJİ", "f": "Tıp Fakültesi"}, {"id": "FARMAKOGNOZİ", "s": "FARMAKOGNOZİ", "f": "Eczacılık Fakültesi"}, {"id": "FARMAKOLOJİ", "s": "FARMAKOLOJİ", "f": "Eczacılık Fakültesi"}, {"id": "FARMASÖTİK BOTANİK", "s": "FARMASÖTİK BOTANİK", "f": "Eczacılık Fakültesi"}, {"id": "FARMASÖTİK BİYOTEKNOLOJİ", "s": "FARMASÖTİK BİYOTEKNOLOJİ", "f": "Eczacılık Fakültesi"}, {"id": "FARMASÖTİK KİMYA", "s": "FARMASÖTİK KİMYA", "f": "Eczacılık Fakültesi"}, {"id": "FARMASÖTİK MİKROBİYOLOJİ", "s": "FARMASÖTİK MİKROBİYOLOJİ", "f": "Eczacılık Fakültesi"}, {"id": "FARMASÖTİK TEKNOLOJİ", "s": "FARMASÖTİK TEKNOLOJİ", "f": "Eczacılık Fakültesi"}, {"id": "FARMASÖTİK TOKSİKOLOJİ", "s": "FARMASÖTİK TOKSİKOLOJİ", "f": "Eczacılık Fakültesi"}, {"id": "FİZYOLOJİ", "s": "FİZYOLOJİ", "f": "Tıp Fakültesi"}, {"id": "FİZİKSEL TIP VE REHABİLİTASYON", "s": "FİZİKSEL TIP VE REHABİLİTASYON", "f": "Tıp Fakültesi"}, {"id": "GENEL CERRAHİ", "s": "GENEL CERRAHİ", "f": "Tıp Fakültesi"}, {"id": "GÖZ HASTALIKLARI", "s": "GÖZ HASTALIKLARI", "f": "Tıp Fakültesi"}, {"id": "GÖĞÜS CERRAHİSİ", "s": "GÖĞÜS CERRAHİSİ", "f": "Tıp Fakültesi"}, {"id": "GÖĞÜS HASTALIKLARI", "s": "GÖĞÜS HASTALIKLARI", "f": "Tıp Fakültesi"}, {"id": "HALK SAĞLIĞI", "s": "HALK SAĞLIĞI", "f": "Tıp Fakültesi"}, {"id": "HALK SAĞLIĞI (GIDA HİJYENİ VE TEKNOLOJİSİ)", "s": "HALK SAĞLIĞI (GIDA HİJYENİ VE TEKNOLOJİSİ)", "f": "Veteriner Fakültesi"}, {"id": "HAYVAN BESLEME VE BESLENME HASTALIKLARI", "s": "HAYVAN BESLEME VE BESLENME HASTALIKLARI", "f": "Veteriner Fakültesi"}, {"id": "HAYVAN SAĞLIĞI EKONOMİSİ VE İŞLETMECİLİĞİ", "s": "HAYVAN SAĞLIĞI EKONOMİSİ VE İŞLETMECİLİĞİ", "f": "Veteriner Fakültesi"}, {"id": "HEMŞİRELİK", "s": "HEMŞİRELİK", "f": "Sağlık Bilimleri Fakültesi"}, {"id": "HİSTOLOJİ VE EMBRİYOLOJİ", "s": "HİSTOLOJİ VE EMBRİYOLOJİ", "f": "Tıp Fakültesi"}, {"id": "HİSTOLOJİ-EMBRİYOLOJİ", "s": "HİSTOLOJİ-EMBRİYOLOJİ", "f": "Tıp Fakültesi"}, {"id": "KADIN HASTALIKLARI VE DOĞUM", "s": "KADIN HASTALIKLARI VE DOĞUM", "f": "Tıp Fakültesi"}, {"id": "KALP VE DAMAR CERRAHİSİ", "s": "KALP VE DAMAR CERRAHİSİ", "f": "Tıp Fakültesi"}, {"id": "KARDİYOLOJİ", "s": "KARDİYOLOJİ", "f": "Tıp Fakültesi"}, {"id": "KLİNİK BİLİMLER", "s": "KLİNİK BİLİMLER", "f": "Veteriner Fakültesi"}, {"id": "KLİNİK ECZACILIK", "s": "KLİNİK ECZACILIK", "f": "Eczacılık Fakültesi"}, {"id": "KLİNİK ÖNCESİ BÖLÜMLER", "s": "KLİNİK ÖNCESİ BÖLÜMLER", "f": "Veteriner Fakültesi"}, {"id": "KULAK BURUN BOĞAZ HASTALIKLARI", "s": "KULAK BURUN BOĞAZ HASTALIKLARI", "f": "Tıp Fakültesi"}, {"id": "KULAK, BURUN, BOĞAZ HASTALIKLARI", "s": "KULAK, BURUN, BOĞAZ HASTALIKLARI", "f": "Tıp Fakültesi"}, {"id": "LABORATUVAR HAYVANLARI BİLİMİ", "s": "LABORATUVAR HAYVANLARI BİLİMİ", "f": "Veteriner Fakültesi"}, {"id": "NÖROLOJİ", "s": "NÖROLOJİ", "f": "Tıp Fakültesi"}, {"id": "NÜKLEER TIP", "s": "NÜKLEER TIP", "f": "Tıp Fakültesi"}, {"id": "ODYOLOJİ", "s": "ODYOLOJİ", "f": "Sağlık Bilimleri Fakültesi"}, {"id": "ORTODONTİ", "s": "ORTODONTİ", "f": "Diş Hekimliği Fakültesi"}, {"id": "ORTOPEDİ VE TRAVMATOLOJİ", "s": "ORTOPEDİ VE TRAVMATOLOJİ", "f": "Tıp Fakültesi"}, {"id": "PEDODONTİ", "s": "PEDODONTİ", "f": "Diş Hekimliği Fakültesi"}, {"id": "PERİODONTOLOJİ", "s": "PERİODONTOLOJİ", "f": "Diş Hekimliği Fakültesi"}, {"id": "PLASTİK, REKONSTRÜKTİF VE ESTETİK CERRAHİ", "s": "PLASTİK, REKONSTRÜKTİF VE ESTETİK CERRAHİ", "f": "Tıp Fakültesi"}, {"id": "PROTETİK DİŞ TEDAVİSİ", "s": "PROTETİK DİŞ TEDAVİSİ", "f": "Diş Hekimliği Fakültesi"}, {"id": "RADYASYON ONKOLOJİSİ", "s": "RADYASYON ONKOLOJİSİ", "f": "Tıp Fakültesi"}, {"id": "RADYOLOJİ", "s": "RADYOLOJİ", "f": "Tıp Fakültesi"}, {"id": "REKREASYON", "s": "REKREASYON", "f": "Spor Bilimleri Fakültesi"}, {"id": "RESTORATİF DİŞ TEDAVİSİ", "s": "RESTORATİF DİŞ TEDAVİSİ", "f": "Diş Hekimliği Fakültesi"}, {"id": "RUH SAĞLIĞI VE HASTALIKLARI", "s": "RUH SAĞLIĞI VE HASTALIKLARI", "f": "Tıp Fakültesi"}, {"id": "SPOR HEKİMLİĞİ", "s": "SPOR HEKİMLİĞİ", "f": "Tıp Fakültesi"}, {"id": "SPOR YÖNETİCİLİĞİ", "s": "SPOR YÖNETİCİLİĞİ", "f": "Spor Bilimleri Fakültesi"}, {"id": "SU ÜRÜNLERİ VE HASTALIKLARI", "s": "SU ÜRÜNLERİ VE HASTALIKLARI", "f": "Veteriner Fakültesi"}, {"id": "TEMEL BİLİMLER", "s": "TEMEL BİLİMLER", "f": "Veteriner Fakültesi"}, {"id": "TEMEL ECZACILIK BİLİMLERİ", "s": "TEMEL ECZACILIK BİLİMLERİ", "f": "Eczacılık Fakültesi"}, {"id": "TIBBİ BİYOKİMYA", "s": "TIBBİ BİYOKİMYA", "f": "Tıp Fakültesi"}, {"id": "TIBBİ BİYOLOJİ", "s": "TIBBİ BİYOLOJİ", "f": "Tıp Fakültesi"}, {"id": "TIBBİ FARMAKOLOJİ", "s": "TIBBİ FARMAKOLOJİ", "f": "Tıp Fakültesi"}, {"id": "TIBBİ GENETİK", "s": "TIBBİ GENETİK", "f": "Tıp Fakültesi"}, {"id": "TIBBİ MİKROBİYOLOJİ", "s": "TIBBİ MİKROBİYOLOJİ", "f": "Tıp Fakültesi"}, {"id": "TIBBİ PARAZİTOLOJİ", "s": "TIBBİ PARAZİTOLOJİ", "f": "Tıp Fakültesi"}, {"id": "TIBBİ PATOLOJİ", "s": "TIBBİ PATOLOJİ", "f": "Tıp Fakültesi"}, {"id": "TIBBİ İMMUNOLOJİ", "s": "TIBBİ İMMUNOLOJİ", "f": "Tıp Fakültesi"}, {"id": "TIP EĞİTİMİ", "s": "TIP EĞİTİMİ", "f": "Tıp Fakültesi"}, {"id": "TIP TARİHİ VE ETİK", "s": "TIP TARİHİ VE ETİK", "f": "Tıp Fakültesi"}, {"id": "VETERİNER ANATOMİSİ", "s": "VETERİNER ANATOMİSİ", "f": "Veteriner Fakültesi"}, {"id": "VETERİNER BİYOKİMYASI", "s": "VETERİNER BİYOKİMYASI", "f": "Veteriner Fakültesi"}, {"id": "VETERİNER BİYOMETRİ", "s": "VETERİNER BİYOMETRİ", "f": "Veteriner Fakültesi"}, {"id": "VETERİNER CERRAHİSİ", "s": "VETERİNER CERRAHİSİ", "f": "Veteriner Fakültesi"}, {"id": "VETERİNER DOĞUM VE JİNEKOLOJİSİ", "s": "VETERİNER DOĞUM VE JİNEKOLOJİSİ", "f": "Veteriner Fakültesi"}, {"id": "VETERİNER FARMAKOLOJİ VE TOKSİKOLOJİSİ", "s": "VETERİNER FARMAKOLOJİ VE TOKSİKOLOJİSİ", "f": "Veteriner Fakültesi"}, {"id": "VETERİNER FİZYOLOJİSİ", "s": "VETERİNER FİZYOLOJİSİ", "f": "Veteriner Fakültesi"}, {"id": "VETERİNER GENETİĞİ", "s": "VETERİNER GENETİĞİ", "f": "Veteriner Fakültesi"}, {"id": "VETERİNER HALK SAĞLIĞI", "s": "VETERİNER HALK SAĞLIĞI", "f": "Veteriner Fakültesi"}, {"id": "VETERİNER HEKİMLİĞİ TARİHİ VE DEONTOLOJİ", "s": "VETERİNER HEKİMLİĞİ TARİHİ VE DEONTOLOJİ", "f": "Veteriner Fakültesi"}, {"id": "VETERİNER HİSTOLOJİ VE EMBRİYOLOJİ", "s": "VETERİNER HİSTOLOJİ VE EMBRİYOLOJİ", "f": "Veteriner Fakültesi"}, {"id": "VETERİNER MİKROBİYOLOJİSİ", "s": "VETERİNER MİKROBİYOLOJİSİ", "f": "Veteriner Fakültesi"}, {"id": "VETERİNER PARAZİTOLOJİSİ", "s": "VETERİNER PARAZİTOLOJİSİ", "f": "Veteriner Fakültesi"}, {"id": "VETERİNER PATOLOJİSİ", "s": "VETERİNER PATOLOJİSİ", "f": "Veteriner Fakültesi"}, {"id": "VETERİNER VİROLOJİ", "s": "VETERİNER VİROLOJİ", "f": "Veteriner Fakültesi"}, {"id": "VETERİNER ZOOTEKNİ", "s": "VETERİNER ZOOTEKNİ", "f": "Veteriner Fakültesi"}, {"id": "VETERİNER İÇ HASTALIKLARI", "s": "VETERİNER İÇ HASTALIKLARI", "f": "Veteriner Fakültesi"}, {"id": "YABANİ HAYVAN HASTALIKLARI", "s": "YABANİ HAYVAN HASTALIKLARI", "f": "Veteriner Fakültesi"}, {"id": "ZOOTEKNİ VE HAYVAN BESLEME", "s": "ZOOTEKNİ VE HAYVAN BESLEME", "f": "Veteriner Fakültesi"}, {"id": "ÇOCUK CERRAHİSİ", "s": "ÇOCUK CERRAHİSİ", "f": "Tıp Fakültesi"}, {"id": "ÇOCUK SAĞLIĞI VE HASTALIKLARI", "s": "ÇOCUK SAĞLIĞI VE HASTALIKLARI", "f": "Tıp Fakültesi"}, {"id": "ÇOCUK VE ERGEN RUH SAĞLIĞI HASTALIKLARI", "s": "ÇOCUK VE ERGEN RUH SAĞLIĞI HASTALIKLARI", "f": "Tıp Fakültesi"}, {"id": "ÇOCUK VE ERGEN RUH SAĞLIĞI VE HASTALIKLARI", "s": "ÇOCUK VE ERGEN RUH SAĞLIĞI VE HASTALIKLARI", "f": "Tıp Fakültesi"}, {"id": "ÜROLOJİ", "s": "ÜROLOJİ", "f": "Tıp Fakültesi"}, {"id": "İMMÜNOLOJİ", "s": "İMMÜNOLOJİ", "f": "Tıp Fakültesi"}, {"id": "İÇ HASTALIKLARI", "s": "İÇ HASTALIKLARI", "f": "Tıp Fakültesi"}];
+const SCORES={"2023": {"ACİL TIP": [12.529, 26.661, 10.905], "ANATOMİ": [27.443, 41.397, 26.824], "ANESTEZİYOLOJİ VE REANİMASYON": [22.155, 35.393, 23.289], "AĞIZ, DİŞ VE ÇENE CERRAHİSİ": [47.396, 41.689, 27.938], "AĞIZ, DİŞ VE ÇENE RADYOLOJİSİ": [28.174, 32.703, 12.845], "BESLENME VE DİYETETİK": [38.924, 41.653, 24.351], "BEYİN VE SİNİR CERRAHİSİ": [20.795, 19.063, 0], "BİYOFİZİK": [25.943, 45.02, 12.984], "BİYOİSTATİSTİK": [81.287, 58.982, 49.453], "DERİ VE ZÜHREVİ HASTALIKLARI": [19.953, 38.269, 23.639], "ECZACILIK MESLEK BİLİMLERİ": [79.967, 79.701, 51.903], "ECZACILIK TEKNOLOJİSİ": [50.097, 55.726, 32.136], "ENDODONTİ": [22.282, 0, 8.507], "ENFEKSİYON HASTALIKLARI VE KLİNİK MİKROBİYOLOJİ": [28.604, 36.794, 25.006], "FİZYOLOJİ": [41.254, 43.394, 25.336], "FİZİKSEL TIP VE REHABİLİTASYON": [27.821, 27.359, 25.215], "GENEL CERRAHİ": [16.987, 21.963, 21.436], "GÖZ HASTALIKLARI": [22.729, 41.322, 12.273], "GÖĞÜS CERRAHİSİ": [14.08, 35.127, 21.774], "GÖĞÜS HASTALIKLARI": [23.949, 44.481, 24.879], "HALK SAĞLIĞI": [26.702, 29.179, 10.117], "HALK SAĞLIĞI (GIDA HİJYENİ VE TEKNOLOJİSİ)": [22.05, 43.862, 43.396], "HEMŞİRELİK": [41.613, 47.321, 13.541], "HİSTOLOJİ-EMBRİYOLOJİ": [50.177, 56.03, 16.58], "KADIN HASTALIKLARI VE DOĞUM": [28.074, 34.245, 10.177], "KALP VE DAMAR CERRAHİSİ": [21.977, 27.633, 9.17], "KARDİYOLOJİ": [20.143, 23.701, 21.868], "KLİNİK BİLİMLER": [37.171, 42.646, 24.788], "KLİNİK ÖNCESİ BÖLÜMLER": [71.434, 58.142, 49.635], "KULAK BURUN BOĞAZ HASTALIKLARI": [12.923, 0, 9.859], "NÖROLOJİ": [33.143, 38.585, 28.211], "NÜKLEER TIP": [19.104, 26.805, 11.607], "ORTODONTİ": [37.82, 27.181, 14.307], "ORTOPEDİ VE TRAVMATOLOJİ": [27.232, 35.419, 11.475], "PEDODONTİ": [37.479, 23.064, 8.29], "PLASTİK, REKONSTRÜKTİF VE ESTETİK CERRAHİ": [11.139, 0, 0], "PROTETİK DİŞ TEDAVİSİ": [29.819, 25.989, 9.65], "RADYASYON ONKOLOJİSİ": [13.75, 38.448, 21.774], "RADYOLOJİ": [43.688, 32.887, 39.278], "REKREASYON": [1.672, 28.052, 20.862], "RESTORATİF DİŞ TEDAVİSİ": [27.301, 26.635, 10.449], "TEMEL BİLİMLER": [38.547, 45.607, 45.598], "TEMEL ECZACILIK BİLİMLERİ": [84.754, 59.819, 48.821], "TIBBİ BİYOKİMYA": [36.397, 40.06, 26.422], "TIBBİ BİYOLOJİ": [78.766, 62.616, 44.059], "TIBBİ FARMAKOLOJİ": [26.827, 39.129, 26.955], "TIBBİ GENETİK": [66.771, 52.021, 35.609], "TIBBİ MİKROBİYOLOJİ": [64.377, 58.734, 31.593], "TIBBİ PATOLOJİ": [25.444, 8.465, 12.721], "TIBBİ İMMUNOLOJİ": [31.127, 17.41, 9.76], "TIP TARİHİ VE ETİK": [26.357, 0, 0], "ZOOTEKNİ VE HAYVAN BESLEME": [50.123, 46.806, 26.388], "ÇOCUK CERRAHİSİ": [15.995, 9.111, 10.905], "ÇOCUK SAĞLIĞI VE HASTALIKLARI": [43.541, 63.201, 55.639], "ÇOCUK VE ERGEN RUH SAĞLIĞI VE HASTALIKLARI": [30.383, 26.805, 0], "ÜROLOJİ": [38.335, 23.42, 10.117], "İÇ HASTALIKLARI": [67.569, 59.729, 53.115]}, "2024": {"ACİL TIP": [43.028, 64.712, 24.823], "ADLİ TIP": [10, 20.283, 0], "ANALİTİK KİMYA": [56.008, 42.791, 30.463], "ANATOMİ": [46.104, 59.402, 14.665], "ANESTEZİYOLOJİ VE REANİMASYON": [55.631, 48.662, 37.226], "ANTRENÖRLÜK EĞİTİMİ": [37.028, 41.803, 24.883], "AĞIZ, DİŞ VE ÇENE CERRAHİSİ": [65.779, 73.044, 30.418], "AĞIZ, DİŞ VE ÇENE RADYOLOJİSİ": [48.272, 33.991, 14.061], "AİLE HEKİMLİĞİ": [34.611, 38.718, 8.861], "BEDEN EĞİTİMİ VE SPOR": [16.079, 13.335, 0], "BESLENME VE DİYETETİK": [74.855, 52.402, 25.433], "BEYİN VE SİNİR CERRAHİSİ": [35.911, 36.096, 38.295], "BİYOFİZİK": [44.089, 12.676, 12.447], "BİYOKİMYA": [39.285, 40.04, 10.538], "BİYOİSTATİSTİK": [84.524, 71.424, 45.693], "DERİ VE ZÜHREVİ HASTALIKLAR": [47.808, 60.448, 32.79], "DÖLERME VE SUNİ TOHUMLAMA": [70.285, 46.142, 23.147], "DİL VE KONUŞMA TERAPİSİ": [12.525, 10, 0], "ECZACILIK TARİHİ VE ETİK": [31.046, 10, 15.85], "ECZACILIK TEMEL BİLİMLERİ": [66.803, 47.18, 37.641], "ENDODONTİ": [38.712, 49.166, 10.86], "ENFEKSİYON HASTALIKLARI VE KLİNİK MİKROBİYOLOJİ": [50.507, 54.313, 27.377], "FARMAKOGNOZİ": [51.817, 35.233, 30.394], "FARMAKOLOJİ": [68.942, 55.05, 32.543], "FARMASÖTİK BOTANİK": [65.187, 45.082, 15.652], "FARMASÖTİK BİYOTEKNOLOJİ": [58.321, 26.122, 11.662], "FARMASÖTİK KİMYA": [10, 10, 0], "FARMASÖTİK MİKROBİYOLOJİ": [35.789, 10, 26.317], "FARMASÖTİK TEKNOLOJİ": [67.407, 38.35, 13.878], "FARMASÖTİK TOKSİKOLOJİ": [48.888, 44.054, 24.265], "FİZYOLOJİ": [58.634, 49.684, 37.538], "FİZİKSEL TIP VE REHABİLİTASYON": [43.558, 28.406, 38.024], "GENEL CERRAHİ": [37.403, 46.907, 36.231], "GÖZ HASTALIKLARI": [48.061, 48.824, 20.102], "GÖĞÜS CERRAHİSİ": [20.261, 10, 0], "GÖĞÜS HASTALIKLARI": [48.79, 43.544, 41.229], "HALK SAĞLIĞI": [57.866, 43.521, 13.839], "HAYVAN BESLEME VE BESLENME HASTALIKLARI": [63.941, 44.92, 12.723], "HAYVAN SAĞLIĞI EKONOMİSİ VE İŞLETMECİLİĞİ": [38.657, 37.15, 13.775], "HEMŞİRELİK": [72.443, 79.291, 27.185], "HİSTOLOJİ VE EMBRİYOLOJİ": [67.333, 63.603, 31.867], "KADIN HASTALIKLARI VE DOĞUM": [38.87, 49.814, 8.053], "KALP VE DAMAR CERRAHİSİ": [44.864, 31.897, 11.198], "KARDİYOLOJİ": [46.7, 45.413, 24.138], "KLİNİK ECZACILIK": [10, 10, 0], "KULAK, BURUN, BOĞAZ HASTALIKLARI": [36.102, 46.204, 22.516], "LABORATUVAR HAYVANLARI BİLİMİ": [16.489, 10, 0], "NÖROLOJİ": [42.817, 48.766, 14.32], "NÜKLEER TIP": [33.932, 37.692, 0], "ODYOLOJİ": [16.383, 10, 4.495], "ORTODONTİ": [62.22, 54.374, 23.188], "ORTOPEDİ VE TRAVMATOLOJİ": [43.297, 42.14, 8.252], "PEDODONTİ": [48.657, 47.72, 12.42], "PERİODONTOLOJİ": [33.364, 17.569, 0], "PLASTİK, REKONSTRÜKTİF VE ESTETİK CERRAHİ": [34.269, 34.998, 9.403], "PROTETİK DİŞ TEDAVİSİ": [43.908, 49.456, 9.384], "RADYASYON ONKOLOJİSİ": [56.929, 63.098, 44.97], "RADYOLOJİ": [44.364, 60.11, 24.29], "REKREASYON": [38.747, 37.458, 21.576], "RESTORATİF DİŞ TEDAVİSİ": [69.268, 47.02, 10.118], "RUH SAĞLIĞI VE HASTALIKLARI": [32.399, 32.599, 0], "SPOR HEKİMLİĞİ": [33.38, 10, 0], "SPOR YÖNETİCİLİĞİ": [13.089, 13.154, 0], "SU ÜRÜNLERİ VE HASTALIKLARI": [42.017, 55.057, 9.403], "TIBBİ BİYOKİMYA": [48.295, 48.016, 12.35], "TIBBİ BİYOLOJİ": [89.296, 63.744, 62.477], "TIBBİ FARMAKOLOJİ": [62.128, 65.507, 38.392], "TIBBİ GENETİK": [91.978, 55.972, 52.626], "TIBBİ MİKROBİYOLOJİ": [82.984, 62.775, 26.965], "TIBBİ PARAZİTOLOJİ": [16.489, 10, 0], "TIBBİ PATOLOJİ": [40.185, 47.16, 10.86], "TIP EĞİTİMİ": [40.773, 10, 9.403], "TIP TARİHİ VE ETİK": [10, 10, 0], "VETERİNER ANATOMİSİ": [35.045, 13.335, 0], "VETERİNER BİYOKİMYASI": [35.112, 23.533, 0], "VETERİNER BİYOMETRİ": [33.875, 20.336, 10.467], "VETERİNER CERRAHİSİ": [36.572, 40.533, 8.861], "VETERİNER DOĞUM VE JİNEKOLOJİSİ": [66.931, 42.721, 41.872], "VETERİNER FARMAKOLOJİ VE TOKSİKOLOJİSİ": [33.773, 13.653, 9.813], "VETERİNER FİZYOLOJİSİ": [31.424, 29.547, 14.338], "VETERİNER GENETİĞİ": [75.686, 59.399, 29.231], "VETERİNER HALK SAĞLIĞI": [70.564, 55.716, 28.372], "VETERİNER HEKİMLİĞİ TARİHİ VE DEONTOLOJİ": [39.264, 43.001, 31.501], "VETERİNER HİSTOLOJİ VE EMBRİYOLOJİ": [62.495, 47.366, 27.578], "VETERİNER MİKROBİYOLOJİSİ": [58.951, 39.318, 41.331], "VETERİNER PARAZİTOLOJİSİ": [80.926, 57.993, 24.373], "VETERİNER PATOLOJİSİ": [40.591, 20.336, 10.467], "VETERİNER VİROLOJİ": [61.16, 39.835, 9.403], "VETERİNER ZOOTEKNİ": [42.068, 17.337, 23.742], "VETERİNER İÇ HASTALIKLARI": [59.111, 55.985, 27.768], "YABANİ HAYVAN HASTALIKLARI": [39.264, 44.956, 30.652], "ÇOCUK CERRAHİSİ": [16.696, 12.311, 0], "ÇOCUK SAĞLIĞI VE HASTALIKLARI": [53.964, 70.142, 51.971], "ÇOCUK VE ERGEN RUH SAĞLIĞI HASTALIKLARI": [47.271, 43.65, 24.106], "ÜROLOJİ": [71.641, 47.544, 46.679], "İMMÜNOLOJİ": [20.851, 13.953, 0], "İÇ HASTALIKLARI": [58.14, 70.824, 51.127]}, "2025": {"ACİL TIP": [37.822, 42.556, 13.41], "ADLİ TIP": [10, 10, 0], "ANALİTİK KİMYA": [84.998, 75.307, 71.335], "ANATOMİ": [48.613, 56.003, 28.962], "ANESTEZİYOLOJİ VE REANİMASYON": [38.156, 42.481, 12.082], "ANTRENÖRLÜK EĞİTİMİ": [36.796, 58.151, 33.827], "AĞIZ, DİŞ VE ÇENE CERRAHİSİ": [73.082, 61.819, 36.172], "AĞIZ, DİŞ VE ÇENE RADYOLOJİSİ": [40.317, 38.303, 26.13], "AİLE HEKİMLİĞİ": [32.824, 36.619, 26.651], "BEDEN EĞİTİMİ VE SPOR": [34.102, 55.924, 12.812], "BESLENME VE DİYETETİK": [51.518, 76.904, 34.235], "BEYİN VE SİNİR CERRAHİSİ": [47, 43.289, 22.756], "BİYOFİZİK": [56.578, 43.733, 12.52], "BİYOKİMYA": [38.85, 41.928, 38.392], "BİYOİSTATİSTİK": [91.827, 77.184, 50.843], "DERİ VE ZÜHREVİ HASTALIKLAR": [39.418, 40.351, 22.528], "DÖLERME VE SUNİ TOHUMLAMA": [55.245, 39.461, 24.22], "ECZACILIK TARİHİ VE ETİK": [25.129, 47.219, 26.728], "ECZACILIK TEMEL BİLİMLERİ": [47.952, 66.603, 44.972], "ENDODONTİ": [40.7, 52.754, 34.711], "ENFEKSİYON HASTALIKLARI VE KLİNİK MİKROBİYOLOJİ": [50.023, 56.698, 45.547], "FARMAKOGNOZİ": [48.773, 62.841, 44.051], "FARMAKOLOJİ": [63.209, 58.652, 30.46], "FARMASÖTİK BOTANİK": [55.611, 36.583, 10.528], "FARMASÖTİK BİYOTEKNOLOJİ": [39.086, 10, 24.398], "FARMASÖTİK KİMYA": [55.462, 64.644, 42.16], "FARMASÖTİK MİKROBİYOLOJİ": [38.619, 36.583, 10.528], "FARMASÖTİK TEKNOLOJİ": [55.59, 51.778, 26.851], "FARMASÖTİK TOKSİKOLOJİ": [32.606, 37.61, 21.838], "FİZYOLOJİ": [63.223, 47.794, 40.252], "FİZİKSEL TIP VE REHABİLİTASYON": [39.198, 39.458, 8.922], "GENEL CERRAHİ": [37.816, 50.641, 42.831], "GÖZ HASTALIKLARI": [37.772, 31.689, 24.018], "GÖĞÜS CERRAHİSİ": [32.679, 10, 0], "GÖĞÜS HASTALIKLARI": [62.605, 66.178, 55.502], "HALK SAĞLIĞI": [42.207, 59.767, 27.576], "HAYVAN BESLEME VE BESLENME HASTALIKLARI": [60.025, 49.729, 45.547], "HAYVAN SAĞLIĞI EKONOMİSİ VE İŞLETMECİLİĞİ": [41.197, 47.839, 15.742], "HEMŞİRELİK": [74.675, 83.366, 43.483], "HİSTOLOJİ VE EMBRİYOLOJİ": [70.726, 71.357, 32.956], "KADIN HASTALIKLARI VE DOĞUM": [39.437, 39.616, 30.128], "KALP VE DAMAR CERRAHİSİ": [47.617, 42.965, 26.748], "KARDİYOLOJİ": [41.645, 52.828, 26.027], "KULAK, BURUN, BOĞAZ HASTALIKLARI": [35.103, 42.01, 24.047], "LABORATUVAR HAYVANLARI BİLİMİ": [31.677, 38.987, 10.528], "NÖROLOJİ": [58.927, 62.758, 50.976], "NÜKLEER TIP": [38.076, 25.424, 10.61], "ORTODONTİ": [55.142, 57.763, 25.474], "ORTOPEDİ VE TRAVMATOLOJİ": [39.986, 49.495, 35.703], "PEDODONTİ": [34.29, 40.858, 22.332], "PERİODONTOLOJİ": [26.066, 29.583, 0], "PLASTİK, REKONSTRÜKTİF VE ESTETİK CERRAHİ": [17.906, 10, 0], "PROTETİK DİŞ TEDAVİSİ": [45.884, 59.599, 39.115], "RADYASYON ONKOLOJİSİ": [49.641, 45.029, 38.392], "RADYOLOJİ": [48.173, 45.993, 38.752], "REKREASYON": [42.678, 49.915, 26.668], "RESTORATİF DİŞ TEDAVİSİ": [42.13, 61.375, 12.812], "RUH SAĞLIĞI VE HASTALIKLARI": [33.8, 40.925, 24.627], "SPOR HEKİMLİĞİ": [32.621, 41.611, 0], "SPOR YÖNETİCİLİĞİ": [26.066, 36.772, 8.922], "SU ÜRÜNLERİ VE HASTALIKLARI": [45.419, 65.204, 50.287], "TIBBİ BİYOKİMYA": [50.487, 66.261, 45.022], "TIBBİ BİYOLOJİ": [88.396, 79.842, 60.204], "TIBBİ FARMAKOLOJİ": [48.807, 51.024, 38.392], "TIBBİ GENETİK": [74.14, 68.48, 53.032], "TIBBİ MİKROBİYOLOJİ": [71.475, 67.999, 48.643], "TIBBİ PARAZİTOLOJİ": [30.455, 18.232, 10.528], "TIBBİ PATOLOJİ": [38.164, 35.52, 11.276], "TIP EĞİTİMİ": [34.68, 38.303, 11.254], "VETERİNER ANATOMİSİ": [36.046, 47.348, 8.568], "VETERİNER BİYOKİMYASI": [36.66, 52.843, 11.254], "VETERİNER BİYOMETRİ": [34.209, 48.776, 25.794], "VETERİNER CERRAHİSİ": [10, 10, 0], "VETERİNER DOĞUM VE JİNEKOLOJİSİ": [53.271, 37.58, 22.528], "VETERİNER FARMAKOLOJİ VE TOKSİKOLOJİSİ": [34.083, 46.618, 8.312], "VETERİNER FİZYOLOJİSİ": [30.423, 39.342, 9.464], "VETERİNER GENETİĞİ": [55.92, 60.474, 45.928], "VETERİNER HALK SAĞLIĞI": [71.373, 53.008, 27.346], "VETERİNER HEKİMLİĞİ TARİHİ VE DEONTOLOJİ": [31.885, 47.219, 10.528], "VETERİNER HİSTOLOJİ VE EMBRİYOLOJİ": [55.462, 47.866, 23.812], "VETERİNER MİKROBİYOLOJİSİ": [69.924, 47.375, 38.407], "VETERİNER PARAZİTOLOJİSİ": [75.047, 44.048, 29.245], "VETERİNER PATOLOJİSİ": [39.735, 65.549, 10.528], "VETERİNER VİROLOJİ": [69.272, 52.27, 30.905], "VETERİNER ZOOTEKNİ": [31.234, 38.496, 24.064], "VETERİNER İÇ HASTALIKLARI": [55.197, 62.185, 43.456], "YABANİ HAYVAN HASTALIKLARI": [39.067, 49.474, 10.528], "ÇOCUK CERRAHİSİ": [15.95, 10, 0], "ÇOCUK SAĞLIĞI VE HASTALIKLARI": [65.516, 71.116, 57.415], "ÇOCUK VE ERGEN RUH SAĞLIĞI HASTALIKLARI": [43.877, 60.112, 35.574], "ÜROLOJİ": [52.276, 42.538, 45.941], "İMMÜNOLOJİ": [68.32, 47.085, 13.34], "İÇ HASTALIKLARI": [52.287, 67.573, 44.699]}};
+const NS='http://www.w3.org/2000/svg';
+
+/* ── LAYOUT ── */
+const PAD={t:36,r:160,b:54,l:50};
+const XD=[0,100], YD=[0,100];
+let W,H,svg;
+let activeFacs=new Set(FACULTIES); // all on by default
+
+function xp(v){return PAD.l+(v-XD[0])/(XD[1]-XD[0])*(W-PAD.l-PAD.r);}
+function yp(v){return H-PAD.b-(v-YD[0])/(YD[1]-YD[0])*(H-PAD.t-PAD.b);}
+
+/* bubble radius: sqrt scale on işbirliği score (0-100ish) */
+function rs(isb){
+  const mn=0,mx=80;
+  const t=Math.max(0,Math.min(1,(isb-mn)/(mx-mn)));
+  return 4+Math.sqrt(t)*22;
+}
+function lfs(r){return Math.max(7.5,Math.min(11.5,r*0.42+6));}
+
+function lerp(a,b,t){return a+(b-a)*t;}
+function ease(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;}
+function mk(tag,a={}){const e=document.createElementNS(NS,tag);Object.entries(a).forEach(([k,v])=>e.setAttribute(k,v));return e;}
+
+function hexA(hex,a){
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+function lighten(hex,amt){
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  const lr=Math.min(255,Math.round(r+(255-r)*amt));
+  const lg=Math.min(255,Math.round(g+(255-g)*amt));
+  const lb=Math.min(255,Math.round(b+(255-b)*amt));
+  return `rgb(${lr},${lg},${lb})`;
+}
+
+function init(){
+  const wrap=document.getElementById('chartbox');
+  W=wrap.offsetWidth||900; H=Math.round(W*0.78);
+  svg=document.getElementById('gs');
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.setAttribute('height',H);
+  svg.innerHTML='';
+
+  const defs=mk('defs');
+  Object.entries(FAC_COLORS).forEach(([fac,col])=>{
+    const gid='rg_'+fac.replace(/[^a-zA-Z0-9]/g,'_');
+    const rg=mk('radialGradient',{id:gid,cx:'35%',cy:'30%',r:'65%'});
+    const s0=mk('stop',{offset:'0%'}); s0.setAttribute('stop-color',lighten(col,0.45));
+    const s1=mk('stop',{offset:'100%'}); s1.setAttribute('stop-color',col);
+    rg.appendChild(s0);rg.appendChild(s1);defs.appendChild(rg);
+  });
+  svg.appendChild(defs);
+
+  /* watermark year */
+  const wm=mk('text',{id:'gwm',x:W-PAD.r+50,y:H-PAD.b-6,
+    'text-anchor':'end','font-size':Math.round(H*0.26),'font-weight':'700',
+    'font-family':"'Open Sans',sans-serif",fill:'rgba(26,58,82,0.05)'});
+  wm.textContent='2023'; svg.appendChild(wm);
+
+  /* grid + 50/50 quadrant lines (template style) */
+  const gg=mk('g',{id:'gg'});
+  [25,50,75,100].forEach(v=>{
+    const isMid=(v===50);
+    gg.appendChild(mk('line',{x1:xp(0),x2:xp(100),y1:yp(v),y2:yp(v),
+      stroke:isMid?'#888':'#e8edf2','stroke-width':isMid?'1.3':'1'}));
+    gg.appendChild(mk('line',{x1:xp(v),x2:xp(v),y1:yp(0),y2:yp(100),
+      stroke:isMid?'#888':'#e8edf2','stroke-width':isMid?'1.3':'1'}));
+    const tx=mk('text',{x:xp(v),y:H-PAD.b+16,'text-anchor':'middle',
+      fill:'#9aa','font-size':'10.5','font-family':"'Open Sans',sans-serif"});
+    tx.textContent=v; gg.appendChild(tx);
+    const ty=mk('text',{x:PAD.l-8,y:yp(v),'text-anchor':'end','dominant-baseline':'middle',
+      fill:'#9aa','font-size':'10.5','font-family':"'Open Sans',sans-serif"});
+    ty.textContent=v; gg.appendChild(ty);
+  });
+  gg.appendChild(mk('line',{x1:xp(0),x2:xp(0),y1:yp(0),y2:yp(100),stroke:'#888','stroke-width':'1.3'}));
+  gg.appendChild(mk('line',{x1:xp(0),x2:xp(100),y1:yp(0),y2:yp(0),stroke:'#888','stroke-width':'1.3'}));
+
+  /* axis titles */
+  const at1=mk('text',{fill:'#445','font-family':"'Open Sans',sans-serif",'font-weight':'700','font-size':'12.5',
+    x:(PAD.l+W-PAD.r)/2,y:H-12,'text-anchor':'middle'});
+  at1.textContent='Araştırma Kapasitesi'; gg.appendChild(at1);
+  const at2=mk('text',{fill:'#445','font-family':"'Open Sans',sans-serif",'font-weight':'700','font-size':'12.5',
+    transform:'rotate(-90)',x:-((PAD.t+H-PAD.b)/2),y:16,'text-anchor':'middle'});
+  at2.textContent='Araştırma Kalitesi'; gg.appendChild(at2);
+
+  svg.appendChild(gg);
+  svg.appendChild(mk('g',{id:'gb'}));
+  svg.appendChild(mk('g',{id:'gl'}));
+
+  /* legend (right side, fixed) */
+  const leg=mk('g',{id:'glegend'});
+  const lx0=W-PAD.r+30;
+  FACULTIES.forEach((fac,i)=>{
+    const ly=PAD.t+10+i*22;
+    const dot=mk('circle',{cx:lx0+6,cy:ly,r:6,fill:FAC_COLORS[fac],opacity:'0.85'});
+    leg.appendChild(dot);
+    const t=mk('text',{x:lx0+18,y:ly,'dominant-baseline':'middle',
+      'font-size':'9','font-family':"'Open Sans',sans-serif",fill:'#445'});
+    t.textContent=fac.replace(' FAKÜLTESİ',''); leg.appendChild(t);
+  });
+  // size legend
+  const szY=PAD.t+10+FACULTIES.length*22+24;
+  const szT=mk('text',{x:lx0,y:szY,'font-size':'9','font-weight':'700',
+    'font-family':"'Open Sans',sans-serif",fill:'#445'});
+  szT.textContent='Araştırma İşbirliği'; leg.appendChild(szT);
+  [10,40,70].forEach((v,i)=>{
+    const r=rs(v);
+    const cy=szY+22+i*26;
+    leg.appendChild(mk('circle',{cx:lx0+14,cy,r,fill:'none',stroke:'#999','stroke-width':'1'}));
+    const t=mk('text',{x:lx0+38,y:cy,'dominant-baseline':'middle','font-size':'9',
+      'font-family':"'Open Sans',sans-serif",fill:'#778'});
+    t.textContent=v; leg.appendChild(t);
+  });
+  svg.appendChild(leg);
+}
+
+/* ── RENDER FRAME ── */
+function frame(fy,ty,t){
+  document.getElementById('gwm').textContent=ty;
+  document.getElementById('yrdisp').textContent=ty;
+
+  const fromS=SCORES[String(fy)]||{}, toS=SCORES[String(ty)]||{};
+
+  const pts=DEPTS.map(d=>{
+    const f=fromS[d.id], to=toS[d.id];
+    if(!f && !to) return null; // never present in either year shown
+    let alpha=1;
+    let useF=f, useTo=to;
+    if(f && !to){ // disappears after fy: fade out
+      useTo=f; alpha=1-ease(t);
+    } else if(!f && to){ // appears at ty: fade in
+      useF=to; alpha=ease(t);
+    }
+    return {
+      id:d.id, s:d.s, fac:d.f, alpha,
+      cx:lerp(useF[0],useTo[0],t),
+      cy:lerp(useF[1],useTo[1],t),
+      rv:lerp(useF[2],useTo[2],t),
+    };
+  }).filter(p=>p && p.alpha>0.04 && activeFacs.has(p.fac))
+    .sort((a,b)=>b.rv-a.rv);
+
+  const gb=document.getElementById('gb'), gl=document.getElementById('gl');
+  gb.innerHTML=''; gl.innerHTML='';
+
+  pts.forEach(p=>{
+    const cx=xp(p.cx), cy=yp(p.cy), r=rs(p.rv);
+    const col=FAC_COLORS[p.fac]||'#888';
+    const gid='rg_'+p.fac.replace(/[^a-zA-Z0-9]/g,'_');
+
+    const c=mk('circle',{cx,cy,r,fill:`url(#${gid})`,stroke:col,'stroke-width':'1','opacity':(0.88*p.alpha).toFixed(3)});
+    c.style.cursor='pointer';
+    c.addEventListener('mouseenter',ev=>{c.setAttribute('stroke-width','2.2');showTip(ev,p,ty);});
+    c.addEventListener('mouseleave',()=>{c.setAttribute('stroke-width','1');document.getElementById('tt').style.display='none';});
+    c.addEventListener('mousemove',ev=>showTip(ev,p,ty));
+    gb.appendChild(c);
+
+    /* label outside, leader line, font size scaled by bubble */
+    const fs=lfs(r);
+    const lbl=p.s;
+    let lx=cx, ly=cy-r-5, anchor='middle';
+    if(ly-fs<yp(100)+4) ly=cy+r+fs+3;
+    const approxW=lbl.length*fs*0.50;
+    if(lx-approxW/2<PAD.l+2) anchor='start';
+    if(lx+approxW/2>W-PAD.r-2) anchor='end';
+
+    const lineY2=ly>cy?cy+r:cy-r;
+    gl.appendChild(mk('line',{x1:cx,y1:ly+(ly>cy?-2:2),x2:cx,y2:lineY2+(ly>cy?3:-3),
+      stroke:col,'stroke-width':'0.6','stroke-dasharray':'2 2',opacity:(0.4*p.alpha).toFixed(3)}));
+
+    const txt=mk('text',{x:lx,y:ly,'text-anchor':anchor,'dominant-baseline':'auto',
+      class:'blab','font-size':fs,'font-weight':r>=14?'600':'400',
+      fill:col,opacity:p.alpha.toFixed(3)});
+    txt.textContent=lbl; gl.appendChild(txt);
+  });
+}
+
+const FULL_BY_ID={};
+DEPTS.forEach(d=>{FULL_BY_ID[d.id]=d.id.replace(/^(.*)$/,m=>m);});
+
+function showTip(ev,p,yr){
+  const tip=document.getElementById('tt');
+  const fullName=p.id.charAt(0)+p.id.slice(1).toLowerCase();
+  tip.innerHTML=`<strong>${p.id}</strong><span class="tc">${p.fac.replace(' FAKÜLTESİ','')} · ${yr}</span>
+    <div class="tr"><span>Kapasite</span><span class="tv">${p.cx.toFixed(2)}</span></div>
+    <div class="tr"><span>Kalite</span><span class="tv">${p.cy.toFixed(2)}</span></div>
+    <div class="tr"><span>İşbirliği</span><span class="tv">${p.rv.toFixed(2)}</span></div>`;
+  tip.style.display='block';
+  let l=ev.clientX+14, t=ev.clientY-10;
+  if(l+200>window.innerWidth-4) l=ev.clientX-210;
+  if(t+110>window.innerHeight-4) t=ev.clientY-115;
+  tip.style.left=l+'px'; tip.style.top=t+'px';
+}
+
+/* ── FACULTY FILTER UI ── */
+function buildFacFilter(){
+  const c=document.getElementById('facfilter');
+  c.innerHTML='';
+  const allBtn=document.createElement('button');
+  allBtn.id='allbtn'; allBtn.textContent='Tümü';
+  allBtn.onclick=()=>{activeFacs=new Set(FACULTIES);renderFacButtons();renderAll(curIdx,1);};
+  c.appendChild(allBtn);
+
+  FACULTIES.forEach(fac=>{
+    const btn=document.createElement('button');
+    btn.className='facbtn';
+    btn.dataset.fac=fac;
+    btn.innerHTML=`<span class="dot" style="background:${FAC_COLORS[fac]}"></span>${fac.replace(' FAKÜLTESİ','')}`;
+    btn.onclick=()=>{
+      if(activeFacs.has(fac) && activeFacs.size===1){
+        activeFacs=new Set(FACULTIES);
+      } else if(activeFacs.size===FACULTIES.length){
+        activeFacs=new Set([fac]);
+      } else if(activeFacs.has(fac)){
+        activeFacs.delete(fac);
+      } else {
+        activeFacs.add(fac);
+      }
+      renderFacButtons();
+      renderAll(curIdx,1);
+    };
+    c.appendChild(btn);
+  });
+  renderFacButtons();
+}
+function renderFacButtons(){
+  document.querySelectorAll('.facbtn').forEach(b=>{
+    const fac=b.dataset.fac;
+    const on=activeFacs.has(fac);
+    b.classList.toggle('on',on && activeFacs.size<FACULTIES.length);
+    b.classList.toggle('dim',!on);
+    b.style.background=on?FAC_COLORS[fac]:'#fff';
+    b.style.borderColor=FAC_COLORS[fac];
+    b.style.color=on?'#fff':'#888';
+  });
+}
+
+/* ── ANIMATION ── */
+let curIdx=0, playing=false, af=null, as2=null;
+const DUR=1700;
+
+function renderAll(i,t=1){
+  curIdx=i;
+  const fy=i===0?YEARS[0]:YEARS[i-1];
+  frame(fy,YEARS[i],t);
+  document.getElementById('tlf').style.width=((i/(YEARS.length-1))*100)+'%';
+  document.querySelectorAll('.tick').forEach((e,j)=>e.classList.toggle('on',j===i));
+}
+
+window.gJump=i=>{stop2();renderAll(i,1);};
+window.gSeek=ev=>{
+  const tl=document.getElementById('tl');
+  const br=tl.getBoundingClientRect();
+  const t=Math.max(0,Math.min(1,(ev.clientX-br.left)/br.width));
+  const raw=t*(YEARS.length-1);
+  const i=Math.min(Math.floor(raw),YEARS.length-2);
+  const frac=raw-i;
+  stop2(); curIdx=i+(frac>.5?1:0);
+  frame(YEARS[i],YEARS[Math.min(i+1,YEARS.length-1)],frac);
+  document.getElementById('tlf').style.width=(t*100)+'%';
+  document.querySelectorAll('.tick').forEach((e,j)=>e.classList.toggle('on',j===curIdx));
+};
+window.gPlay=()=>{
+  if(playing){stop2();return;}
+  if(curIdx>=YEARS.length-1)curIdx=0;
+  playing=true;
+  document.getElementById('ppath').setAttribute('d','M3 2h2v8H3zM7 2h2v8H7z');
+  next2();
+};
+function stop2(){
+  playing=false;
+  if(af){cancelAnimationFrame(af);af=null;}
+  document.getElementById('ppath').setAttribute('d','M2 1.5l9 4.5-9 4.5z');
+}
+function next2(){
+  if(!playing)return;
+  const ni=curIdx+1;
+  if(ni>=YEARS.length){stop2();renderAll(YEARS.length-1,1);return;}
+  const fy=YEARS[curIdx]; as2=null;
+  document.querySelectorAll('.tick').forEach((e,j)=>e.classList.toggle('on',j===ni));
+  function step(ts){
+    if(!playing)return;
+    if(!as2)as2=ts;
+    const raw=Math.min((ts-as2)/DUR,1);
+    const t=ease(raw);
+    curIdx=ni;
+    document.getElementById('tlf').style.width=(((ni-1+raw)/(YEARS.length-1))*100)+'%';
+    frame(fy,YEARS[ni],t);
+    if(raw<1){af=requestAnimationFrame(step);}
+    else{setTimeout(()=>{if(playing&&ni<YEARS.length-1)next2();else stop2();},1000);}
+  }
+  af=requestAnimationFrame(step);
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  buildFacFilter();
+  init();
+  renderAll(0,1);
+});
+window.addEventListener('resize',()=>{
+  init();
+  renderAll(curIdx,1);
+});
+</script>
+</body>
+</html>

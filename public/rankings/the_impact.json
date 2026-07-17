@@ -1,0 +1,602 @@
+[
+    {
+        "year": 2026,
+        "overall": {
+            "rank_display": "201-300",
+            "rank": 325
+        },
+        "no_poverty": {
+            "rank_display": "401-600",
+            "rank": 441
+        },
+        "zero_hunger": {
+            "rank_display": "301-400",
+            "rank": 218
+        },
+        "good_health_and_well_being": {
+            "rank_display": "401-600",
+            "rank": 646
+        },
+        "quality_education": {
+            "rank_display": "401-600",
+            "rank": 437
+        },
+        "gender_equality": {
+            "rank_display": "401-600",
+            "rank": 649
+        },
+        "clean_water_and_sanitation": {
+            "rank_display": "401-600",
+            "rank": 441
+        },
+        "affordable_and_clean_energy": {
+            "rank_display": "301-400",
+            "rank": 445
+        },
+        "decent_work_and_economic_growth": {
+            "rank_display": "201-300",
+            "rank": 433
+        },
+        "industry_innovation_and_infrastructure": {
+            "rank_display": "=61",
+            "rank": 83
+        },
+        "reduced_inequalities": {
+            "rank_display": "201-300",
+            "rank": 221
+        },
+        "sustainable_cities_and_communities": {
+            "rank_display": "401-600",
+            "rank": 439
+        },
+        "responsible_consumption_and_production": {
+            "rank_display": "201-300",
+            "rank": 119
+        },
+        "climate_action": {
+            "rank_display": "201-300",
+            "rank": 219
+        },
+        "life_below_water": {
+            "rank_display": "301-400",
+            "rank": 221
+        },
+        "life_on_land": {
+            "rank_display": "301-400",
+            "rank": 215
+        },
+        "peace_and_justice_strong_institutions": {
+            "rank_display": "401-600",
+            "rank": 620
+        },
+        "partnerships_for_the_goals": {
+            "rank_display": "301-400",
+            "rank": 315
+        }
+    },
+    {
+        "year": 2025,
+        "overall": {
+            "rank_display": "301-400",
+            "rank": 325
+        },
+        "no_poverty": {
+            "rank_display": "401-600",
+            "rank": 441
+        },
+        "zero_hunger": {
+            "rank_display": "201-300",
+            "rank": 218
+        },
+        "good_health_and_well_being": {
+            "rank_display": "601-800",
+            "rank": 646
+        },
+        "quality_education": {
+            "rank_display": "401-600",
+            "rank": 437
+        },
+        "gender_equality": {
+            "rank_display": "601-800",
+            "rank": 649
+        },
+        "clean_water_and_sanitation": {
+            "rank_display": "401-600",
+            "rank": 441
+        },
+        "affordable_and_clean_energy": {
+            "rank_display": "401-600",
+            "rank": 445
+        },
+        "decent_work_and_economic_growth": {
+            "rank_display": "401-600",
+            "rank": 433
+        },
+        "industry_innovation_and_infrastructure": {
+            "rank_display": "=83",
+            "rank": 83
+        },
+        "reduced_inequalities": {
+            "rank_display": "201-300",
+            "rank": 221
+        },
+        "sustainable_cities_and_communities": {
+            "rank_display": "401-600",
+            "rank": 439
+        },
+        "responsible_consumption_and_production": {
+            "rank_display": "101-200",
+            "rank": 119
+        },
+        "climate_action": {
+            "rank_display": "201-300",
+            "rank": 219
+        },
+        "life_below_water": {
+            "rank_display": "201-300",
+            "rank": 221
+        },
+        "life_on_land": {
+            "rank_display": "201-300",
+            "rank": 215
+        },
+        "peace_and_justice_strong_institutions": {
+            "rank_display": "601-800",
+            "rank": 620
+        },
+        "partnerships_for_the_goals": {
+            "rank_display": "301-400",
+            "rank": 315
+        }
+    },
+    {
+        "year": 2024,
+        "overall": {
+            "rank_display": "301-400",
+            "rank": 323
+        },
+        "no_poverty": {
+            "rank_display": "401-600",
+            "rank": 435
+        },
+        "zero_hunger": {
+            "rank_display": "301-400",
+            "rank": 315
+        },
+        "good_health_and_well_being": {
+            "rank_display": "401-600",
+            "rank": 433
+        },
+        "quality_education": {
+            "rank_display": "401-600",
+            "rank": 436
+        },
+        "gender_equality": {
+            "rank_display": "601-800",
+            "rank": 650
+        },
+        "clean_water_and_sanitation": {
+            "rank_display": "401-600",
+            "rank": 438
+        },
+        "affordable_and_clean_energy": {
+            "rank_display": "601-800",
+            "rank": 643
+        },
+        "decent_work_and_economic_growth": {
+            "rank_display": "301-400",
+            "rank": 319
+        },
+        "industry_innovation_and_infrastructure": {
+            "rank_display": "=98",
+            "rank": 98
+        },
+        "reduced_inequalities": {
+            "rank_display": "201-300",
+            "rank": 222
+        },
+        "sustainable_cities_and_communities": {
+            "rank_display": "401-600",
+            "rank": 427
+        },
+        "responsible_consumption_and_production": {
+            "rank_display": "301-400",
+            "rank": 317
+        },
+        "climate_action": {
+            "rank_display": "101-200",
+            "rank": 118
+        },
+        "life_below_water": {
+            "rank_display": "201-300",
+            "rank": 216
+        },
+        "life_on_land": {
+            "rank_display": "101-200",
+            "rank": 112
+        },
+        "peace_and_justice_strong_institutions": {
+            "rank_display": "301-400",
+            "rank": 308
+        },
+        "partnerships_for_the_goals": {
+            "rank_display": "201-300",
+            "rank": 217
+        }
+    },
+    {
+        "year": 2023,
+        "overall": {
+            "rank_display": "301-400",
+            "rank": 332
+        },
+        "no_poverty": {
+            "rank_display": "401-600",
+            "rank": 450
+        },
+        "zero_hunger": {
+            "rank_display": "301-400",
+            "rank": 326
+        },
+        "good_health_and_well_being": {
+            "rank_display": "601-800",
+            "rank": 669
+        },
+        "quality_education": {
+            "rank_display": "301-400",
+            "rank": 325
+        },
+        "gender_equality": {
+            "rank_display": "601-800",
+            "rank": 651
+        },
+        "clean_water_and_sanitation": {
+            "rank_display": "201-300",
+            "rank": 227
+        },
+        "affordable_and_clean_energy": {
+            "rank_display": "601-800",
+            "rank": 650
+        },
+        "decent_work_and_economic_growth": {
+            "rank_display": "401-600",
+            "rank": 444
+        },
+        "industry_innovation_and_infrastructure": {
+            "rank_display": "=90",
+            "rank": 90
+        },
+        "reduced_inequalities": {
+            "rank_display": "201-300",
+            "rank": 227
+        },
+        "sustainable_cities_and_communities": {
+            "rank_display": "301-400",
+            "rank": 324
+        },
+        "responsible_consumption_and_production": {
+            "rank_display": "201-300",
+            "rank": 226
+        },
+        "climate_action": {
+            "rank_display": "100",
+            "rank": 100
+        },
+        "life_below_water": {
+            "rank_display": "201-300",
+            "rank": 234
+        },
+        "life_on_land": {
+            "rank_display": "101-200",
+            "rank": 122
+        },
+        "peace_and_justice_strong_institutions": {
+            "rank_display": "401-600",
+            "rank": 426
+        },
+        "partnerships_for_the_goals": {
+            "rank_display": "401-600",
+            "rank": 454
+        }
+    },
+    {
+        "year": 2022,
+        "overall": {
+            "rank_display": "301-400",
+            "rank": 322
+        },
+        "no_poverty": {
+            "rank_display": "301-400",
+            "rank": 325
+        },
+        "zero_hunger": {
+            "rank_display": "201-300",
+            "rank": 224
+        },
+        "good_health_and_well_being": {
+            "rank_display": "301-400",
+            "rank": 327
+        },
+        "quality_education": {
+            "rank_display": "201-300",
+            "rank": 222
+        },
+        "gender_equality": {
+            "rank_display": "601-800",
+            "rank": 654
+        },
+        "clean_water_and_sanitation": {
+            "rank_display": "201-300",
+            "rank": 225
+        },
+        "affordable_and_clean_energy": {
+            "rank_display": "401-600",
+            "rank": 440
+        },
+        "decent_work_and_economic_growth": {
+            "rank_display": "301-400",
+            "rank": 321
+        },
+        "industry_innovation_and_infrastructure": {
+            "rank_display": "=94",
+            "rank": 94
+        },
+        "reduced_inequalities": {
+            "rank_display": "201-300",
+            "rank": 226
+        },
+        "sustainable_cities_and_communities": {
+            "rank_display": "201-300",
+            "rank": 227
+        },
+        "responsible_consumption_and_production": {
+            "rank_display": "301-400",
+            "rank": 329
+        },
+        "climate_action": {
+            "rank_display": "130",
+            "rank": 130
+        },
+        "life_below_water": {
+            "rank_display": "201-300",
+            "rank": 226
+        },
+        "life_on_land": {
+            "rank_display": "201-300",
+            "rank": 221
+        },
+        "peace_and_justice_strong_institutions": {
+            "rank_display": "401-600",
+            "rank": 423
+        },
+        "partnerships_for_the_goals": {
+            "rank_display": "401-600",
+            "rank": 457
+        }
+    },
+    {
+        "year": 2021,
+        "overall": {
+            "rank_display": "301-400",
+            "rank": 333
+        },
+        "no_poverty": {
+            "rank_display": "301-400",
+            "rank": 324
+        },
+        "zero_hunger": {
+            "rank_display": "201-300",
+            "rank": 222
+        },
+        "good_health_and_well_being": {
+            "rank_display": "301-400",
+            "rank": 319
+        },
+        "quality_education": {
+            "rank_display": "401-600",
+            "rank": 449
+        },
+        "gender_equality": {
+            "rank_display": "301-400",
+            "rank": 324
+        },
+        "clean_water_and_sanitation": {
+            "rank_display": "301-400",
+            "rank": 329
+        },
+        "affordable_and_clean_energy": {
+            "rank_display": "401-600",
+            "rank": 437
+        },
+        "decent_work_and_economic_growth": {
+            "rank_display": "301-400",
+            "rank": 318
+        },
+        "industry_innovation_and_infrastructure": {
+            "rank_display": "=86",
+            "rank": 86
+        },
+        "reduced_inequalities": {
+            "rank_display": "301-400",
+            "rank": 328
+        },
+        "sustainable_cities_and_communities": {
+            "rank_display": "301-400",
+            "rank": 317
+        },
+        "responsible_consumption_and_production": {
+            "rank_display": "201-300",
+            "rank": 232
+        },
+        "climate_action": {
+            "rank_display": "=96",
+            "rank": 96
+        },
+        "life_below_water": {
+            "rank_display": "201-300",
+            "rank": 229
+        },
+        "life_on_land": {
+            "rank_display": "101-200",
+            "rank": 125
+        },
+        "peace_and_justice_strong_institutions": {
+            "rank_display": "401-600",
+            "rank": 450
+        },
+        "partnerships_for_the_goals": {
+            "rank_display": "401-600",
+            "rank": 451
+        }
+    },
+    {
+        "year": 2020,
+        "overall": {
+            "rank_display": "301-400",
+            "rank": 329
+        },
+        "no_poverty": {
+            "rank_display": "101-200",
+            "rank": 124
+        },
+        "zero_hunger": {
+            "rank_display": "101-300",
+            "rank": 126
+        },
+        "good_health_and_well_being": {
+            "rank_display": "401-600",
+            "rank": 461
+        },
+        "quality_education": {
+            "rank_display": "401-600",
+            "rank": 467
+        },
+        "gender_equality": {
+            "rank_display": "201-300",
+            "rank": 230
+        },
+        "clean_water_and_sanitation": {
+            "rank_display": "201-300",
+            "rank": 226
+        },
+        "affordable_and_clean_energy": {
+            "rank_display": "201-300",
+            "rank": 225
+        },
+        "decent_work_and_economic_growth": {
+            "rank_display": "101-200",
+            "rank": 126
+        },
+        "industry_innovation_and_infrastructure": {
+            "rank_display": "=77",
+            "rank": 77
+        },
+        "reduced_inequalities": {
+            "rank_display": "301-400",
+            "rank": 328
+        },
+        "sustainable_cities_and_communities": {
+            "rank_display": "201-300",
+            "rank": 232
+        },
+        "responsible_consumption_and_production": {
+            "rank_display": "201-300",
+            "rank": 222
+        },
+        "climate_action": {
+            "rank_display": "101-200",
+            "rank": 124
+        },
+        "life_below_water": {
+            "rank_display": "101-200",
+            "rank": 126
+        },
+        "life_on_land": {
+            "rank_display": "101-200",
+            "rank": 126
+        },
+        "peace_and_justice_strong_institutions": {
+            "rank_display": "301-400",
+            "rank": 328
+        },
+        "partnerships_for_the_goals": {
+            "rank_display": "401-600",
+            "rank": 464
+        }
+    },
+    {
+        "year": 2019,
+        "overall": {
+            "rank_display": "201-300",
+            "rank": 231
+        },
+        "no_poverty": {
+            "rank_display": "",
+            "rank": 0
+        },
+        "zero_hunger": {
+            "rank_display": "",
+            "rank": 0
+        },
+        "good_health_and_well_being": {
+            "rank_display": "101-200",
+            "rank": 124
+        },
+        "quality_education": {
+            "rank_display": "201-300",
+            "rank": 233
+        },
+        "gender_equality": {
+            "rank_display": "101-200",
+            "rank": 123
+        },
+        "clean_water_and_sanitation": {
+            "rank_display": "",
+            "rank": 0
+        },
+        "affordable_and_clean_energy": {
+            "rank_display": "",
+            "rank": 0
+        },
+        "decent_work_and_economic_growth": {
+            "rank_display": "101-200",
+            "rank": 126
+        },
+        "industry_innovation_and_infrastructure": {
+            "rank_display": "=81",
+            "rank": 81
+        },
+        "reduced_inequalities": {
+            "rank_display": "201-300",
+            "rank": 224
+        },
+        "sustainable_cities_and_communities": {
+            "rank_display": "101-200",
+            "rank": 120
+        },
+        "responsible_consumption_and_production": {
+            "rank_display": "88",
+            "rank": 88
+        },
+        "climate_action": {
+            "rank_display": "101-200",
+            "rank": 124
+        },
+        "life_below_water": {
+            "rank_display": "",
+            "rank": 0
+        },
+        "life_on_land": {
+            "rank_display": "",
+            "rank": 0
+        },
+        "peace_and_justice_strong_institutions": {
+            "rank_display": "101-200",
+            "rank": 126
+        },
+        "partnerships_for_the_goals": {
+            "rank_display": "101-200",
+            "rank": 132
+        }
+    }
+]

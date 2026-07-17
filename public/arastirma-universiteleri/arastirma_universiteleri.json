@@ -1,0 +1,722 @@
+{
+    "ARAŞTIRMA_KAPASİTESİ": [
+        {
+            "2019": {
+                "count": 663,
+                "rate": 0.62,
+                "original": "663 (0,62)"
+            },
+            "2020": {
+                "count": 825,
+                "rate": 0.74,
+                "original": "825 (0,74)"
+            },
+            "2021": {
+                "count": 1004,
+                "rate": 0.89,
+                "original": "1004 (0,89)"
+            },
+            "2022": {
+                "count": 1219,
+                "rate": 1.07,
+                "original": "1219 (1,07)"
+            },
+            "2023": {
+                "count": 1223,
+                "rate": 1.06,
+                "original": "1223 (1,06)"
+            },
+            "2024": {
+                "count": 1278,
+                "rate": 1.06,
+                "original": "1278 (1,06)"
+            },
+            "2025": {
+                "count": 1548,
+                "rate": 1.26,
+                "original": "1548 (1,26)"
+            },
+            "column_0": "1.1. Bilimsel yayın sayısı"
+        },
+        {
+            "2019": {
+                "count": 28844,
+                "rate": 26.93,
+                "original": "28844 (26,93)"
+            },
+            "2020": {
+                "count": 33059,
+                "rate": 29.68,
+                "original": "33059 (29,68)"
+            },
+            "2021": {
+                "count": 37900,
+                "rate": 33.57,
+                "original": "37900 (33,57)"
+            },
+            "2022": {
+                "count": 41389,
+                "rate": 36.31,
+                "original": "41389 (36,31)"
+            },
+            "2023": {
+                "count": 55397,
+                "rate": 47.84,
+                "original": "55397 (47,84)"
+            },
+            "2024": {
+                "count": 70650,
+                "rate": 59.02,
+                "original": "70650 (59,02)"
+            },
+            "2025": {
+                "count": 84784,
+                "rate": 73.15,
+                "original": "84784 (69,15)"
+            },
+            "column_0": "1.2. Atıf sayısı"
+        },
+        {
+            "2019": {
+                "count": 146,
+                "rate": 0.14,
+                "original": "146 (0,14)"
+            },
+            "2020": {
+                "count": 115,
+                "rate": 0.1,
+                "original": "115 (0,10)"
+            },
+            "2021": {
+                "count": 122,
+                "rate": 0.11,
+                "original": "122 (0,11)"
+            },
+            "2022": {
+                "count": 126,
+                "rate": 0.11,
+                "original": " 126 (0,11)"
+            },
+            "2023": {
+                "count": 142,
+                "rate": 0.12,
+                "original": "142 (0.12)"
+            },
+            "2024": {
+                "count": 227,
+                "rate": 0.19,
+                "original": "227 (0.19)"
+            },
+            "2025": {
+                "count": 191,
+                "rate": 0.15,
+                "original": "191 (0.15)"
+            },
+            "column_0": "1.3. Ulusal AR-GE ve Yenilik Destek Programlarından Alınan Proje Sayısı"
+        },
+        {
+            "2019": "14.687.981,04 ₺",
+            "2020": "17.709.271,32 ₺",
+            "2021": " 34.397.043,50 ₺",
+            "2022": "20.740.002,84 ₺",
+            "2023": "40.506.550,14 ₺",
+            "2024": "79.142.582,83 ₺",
+            "2025": "100.973.358,19 ₺",
+            "column_0": "1.4. Ulusal AR-GE Ve Yenilik Destek Programlarından İlgili Yılda Kuruma Aktarılan Fon Tutar"
+        },
+        {
+            "2019": "490.748,00 ₺",
+            "2020": "720.200,00 ₺",
+            "2021": "₺2.394.277,32 ₺",
+            "2022": "1.493.037,00 ₺",
+            "2023": "1.808.381,38 ₺",
+            "2024": "5.742.621,92 ₺",
+            "2025": "87.002.481,01 ₺",
+            "column_0": "1.5. Uluslararası Proje Fon Tutarı"
+        },
+        {
+            "2019": {
+                "count": 110,
+                "rate": 0.1,
+                "original": "110 (0,10)"
+            },
+            "2020": {
+                "count": 226,
+                "rate": 0.2,
+                "original": "226 (0,20)"
+            },
+            "2021": {
+                "count": 289,
+                "rate": 0.26,
+                "original": "289 (0,26)"
+            },
+            "2022": {
+                "count": 278,
+                "rate": 0.24,
+                "original": "278 (0,24)"
+            },
+            "2023": {
+                "count": 248,
+                "rate": 0.21,
+                "original": "248 (0,21)"
+            },
+            "2024": {
+                "count": 407,
+                "rate": 0.35,
+                "original": "407 (0,35)"
+            },
+            "2025": {
+                "count": 431,
+                "rate": 0.36,
+                "original": "431 (0,36)"
+            },
+            "column_0": "1.6. Ulusal ve Uluslararası Patent Başvuru Sayısı"
+        },
+        {
+            "2019": {
+                "count": 12,
+                "rate": 0.01,
+                "original": "12 (0,01)"
+            },
+            "2020": {
+                "count": 20,
+                "rate": 0.02,
+                "original": "20 (0,02)"
+            },
+            "2021": {
+                "count": 40,
+                "rate": 0.04,
+                "original": "40 (0,04)"
+            },
+            "2022": {
+                "count": 47,
+                "rate": 0.04,
+                "original": "47 (0,04)"
+            },
+            "2023": {
+                "count": 60,
+                "rate": 0.05,
+                "original": "60 (0,05)"
+            },
+            "2024": {
+                "count": 70,
+                "rate": 0.06,
+                "original": "70 (0,06)"
+            },
+            "2025": {
+                "count": 80,
+                "rate": 0.06,
+                "original": "80 (0,06)"
+            },
+            "column_0": "1.7. Ulusal Patent Belge Sayısı "
+        },
+        {
+            "2019": {
+                "count": 6,
+                "rate": 0.006,
+                "original": "6 (0,006)"
+            },
+            "2020": {
+                "count": 7,
+                "rate": 0.006,
+                "original": "7 (0,006)"
+            },
+            "2021": {
+                "count": 6,
+                "rate": 0.005,
+                "original": "6 (0,005)"
+            },
+            "2022": {
+                "count": 5,
+                "rate": 0.004,
+                "original": "5 (0,004)"
+            },
+            "2023": {
+                "count": 1,
+                "rate": 0.001,
+                "original": "1 (0,001)"
+            },
+            "2024": {
+                "count": 2,
+                "rate": 0.002,
+                "original": "2 (0,002)"
+            },
+            "2025": {
+                "count": 6,
+                "rate": 0.005,
+                "original": "6 (0,005)"
+            },
+            "column_0": "1.8. Uluslararası Patent Belge Sayısı"
+        },
+        {
+            "2019": {
+                "count": 3,
+                "rate": 0.003,
+                "original": "3 (0,003)"
+            },
+            "2020": {
+                "count": 4,
+                "rate": 0.004,
+                "original": "4 (0,004)"
+            },
+            "2021": {
+                "count": 3,
+                "rate": 0.003,
+                "original": "3 (0,003)"
+            },
+            "2022": {
+                "count": 3,
+                "rate": 0.003,
+                "original": "3 (0,003)"
+            },
+            "2023": {
+                "count": 6,
+                "rate": 0.005,
+                "original": "6 (0,005)"
+            },
+            "2024": {
+                "count": 6,
+                "rate": 0.005,
+                "original": "6 (0,005)"
+            },
+            "2025": {
+                "count": 8,
+                "rate": 0.007,
+                "original": "8 (0,007)"
+            },
+            "column_0": "1.9. Faydalı Model Ve Endüstriyel Tasarım Belge Sayısı "
+        },
+        {
+            "2019": "-",
+            "2020": "-",
+            "2021": "-",
+            "2022": 1,
+            "2023": 3,
+            "2024": 10,
+            "2025": 7,
+            "column_0": "1.10. Desteklenen Uluslararası Proje Sayısı"
+        }
+    ],
+    "ARAŞTIRMA_KALİTESİ": [
+        {
+            "2019": 0.348,
+            "2020": 0.395,
+            "2021": 0.46,
+            "2022": 0.55,
+            "2023": 0.61,
+            "2024": 0.69,
+            "2025": 0.717,
+            "column_0": "2.1. Incites Dergi Etki Değerinde İlk %50’lik Dilime Giren Bilimsel Yayın Oranı"
+        },
+        {
+            "2019": 0.053,
+            "2020": 0.072,
+            "2021": 0.101,
+            "2022": 0.109,
+            "2023": 0.12,
+            "2024": 0.097,
+            "2025": 0.107,
+            "column_0": "2.2. Incites Dergi Etki Değerinde İlk %10’lik Dilime Giren Yayın Oranı"
+        },
+        {
+            "2019": 2,
+            "2020": 3,
+            "2021": 3,
+            "2022": 3,
+            "2023": 5,
+            "2024": 4,
+            "2025": 1,
+            "column_0": "2.3. Bilim Ödülü Sayısı "
+        },
+        {
+            "2019": "0,00 ₺",
+            "2020": "0,00 ₺",
+            "2021": "0,00 ₺",
+            "2022": "0,00 ₺",
+            "2023": "0,00 ₺",
+            "2024": "7.279.716,00 ₺",
+            "2025": "19.246.505,00 ₺",
+            "column_0": "2.4. TÜBİTAK 1004 Programı Kapsamında Desteklenen Teknoloji Platformu Projesi Kapsamında Alınan Fon Tutarı"
+        },
+        {
+            "2019": 32.68,
+            "2020": 26.7,
+            "2021": 28.18,
+            "2022": 32.95,
+            "2023": 41.13,
+            "2024": 46.93,
+            "2025": 57.17,
+            "column_0": "2.5. Yayınların Açık Erişim Yüzdesi"
+        },
+        {
+            "2019": { "THE": "801–1000", "QS": "-", "ARWU": "701-800" },
+            "2020": { "THE": "1001+", "QS": "-", "ARWU": "901-1000" },
+            "2021": { "THE": "1001+", "QS": "-", "ARWU": "-" },
+            "2022": { "THE": "1201+", "QS": "1401+", "ARWU": "901-1000" },
+            "2023": { "THE": "1201–1500", "QS": "1201-1400", "ARWU": "901-1000" },
+            "2024": { "THE": "1201–1500", "QS": "1201-1400", "ARWU": "-" },
+            "2025": { "THE": "1201–1500", "QS": "1201-1400", "ARWU": "-" },
+            "column_0": "2.6. Dünya Akademik Genel Başarı Sıralamalarındaki Performansı"
+        },
+        {
+            "2019": 16,
+            "2020": 21,
+            "2021": 31,
+            "2022": 41,
+            "2023": 35,
+            "2024": 41,
+            "2025": 37,
+            "column_0": "2.7. Akredite Edilmiş Program Sayısı"
+        },
+        {
+            "2019": 0.08,
+            "2020": 0.09,
+            "2021": 0.11,
+            "2022": 0.1,
+            "2023": 0.12,
+            "2024": 0.12,
+            "2025": 0.11,
+            "column_0": "2.8.  Uluslararası Doktora Öğrenci Oranı"
+        },
+        {
+            "2019": 192,
+            "2020": 162,
+            "2021": 152,
+            "2022": 203,
+            "2023": 196,
+            "2024": 265,
+            "2025": 309,
+            "column_0": "2.9. Doktora Mezun Sayısı "
+        },
+        {
+            "2019": {
+                "count": 1905,
+                "rate": 1.78,
+                "original": "1905 (1,78)"
+            },
+            "2020": {
+                "count": 2241,
+                "rate": 2.01,
+                "original": "2241 (2,01)"
+            },
+            "2021": {
+                "count": 2374,
+                "rate": 2.1,
+                "original": "2374 (2,10)"
+            },
+            "2022": {
+                "count": 2353,
+                "rate": 2.06,
+                "original": "2353 (2,06)"
+            },
+            "2023": {
+                "count": 2370,
+                "rate": 2.01,
+                "original": "2370 (2,01)"
+            },
+            "2024": {
+                "count": 2319,
+                "rate": 1.99,
+                "original": "2319 (1,99)"
+            },
+            "2025": {
+                "count": 2171,
+                "rate": 1.77,
+                "original": "2171 (1,77)"
+            },
+            "column_0": "2.10. Doktora Öğrenci Sayısı  "
+        }
+    ],
+    "ETKİLEŞİM_VE_İŞBİRLİĞİ": [
+        {
+            "2019": {
+                "count": 0.651,
+                "rate": 546,
+                "original": "0,651 (546)"
+            },
+            "2020": {
+                "count": 0.667,
+                "rate": 674,
+                "original": "0,667 (674)"
+            },
+            "2021": {
+                "count": 0.701,
+                "rate": 857,
+                "original": "0,701 (857)"
+            },
+            "2022": {
+                "count": 0.73,
+                "rate": 915,
+                "original": "0,730 (915)"
+            },
+            "2023": {
+                "count": 0.739,
+                "rate": 904,
+                "original": "0,739 (904)"
+            },
+            "2024": {
+                "count": 0.81,
+                "rate": 786,
+                "original": "0,810 (786)"
+            },
+            "2025": {
+                "count": 0.763,
+                "rate": 786,
+                "original": "0,763 (786)"
+            },
+            "column_0": "3.1. Üniversite-Üniversite İşbirlikli Yayın Oranı"
+        },
+        {
+            "2019": {
+                "count": 0.021,
+                "rate": 14,
+                "original": "0,021 (14)"
+            },
+            "2020": {
+                "count": 0.032,
+                "rate": 27,
+                "original": "0,032 (27)"
+            },
+            "2021": {
+                "count": 0.016,
+                "rate": 16,
+                "original": "0,016 (16)"
+            },
+            "2022": {
+                "count": 0.019,
+                "rate": 23,
+                "original": "0,019 (23)"
+            },
+            "2023": {
+                "count": 0.026,
+                "rate": 32,
+                "original": "0,026 (32)"
+            },
+            "2024": {
+                "count": 0.037,
+                "rate": 40,
+                "original": "0,038 (40)"
+            },
+            "2025": {
+                "count": 0.025,
+                "rate": 40,
+                "original": "0,038 (40)"
+            },
+            "column_0": "3.2. Üniversite-İş Dünyası İşbirlikli Yayın Oranı"
+        },
+        {
+            "2019": {
+                "count": 0.142,
+                "rate": 95,
+                "original": "0,142 (95)"
+            },
+            "2020": {
+                "count": 0.184,
+                "rate": 152,
+                "original": "0,184 (152)"
+            },
+            "2021": {
+                "count": 0.222,
+                "rate": 223,
+                "original": "0,222 (223)"
+            },
+            "2022": {
+                "count": 0.278,
+                "rate": 339,
+                "original": "0,278 (339)"
+            },
+            "2023": {
+                "count": 0.308,
+                "rate": 377,
+                "original": "0,308 (377)"
+            },
+            "2024": {
+                "count": 0.336,
+                "rate": 318,
+                "original": "0,306 (318)"
+            },
+            "2025": {
+                "count": 0.321,
+                "rate": 318,
+                "original": "0,306 (318)"
+            },
+            "column_0": "3.3. Uluslararası İşbirlikli Yayın Oranı"
+        },
+        {
+            "2019": {
+                "count": 5,
+                "rate": 0.005,
+                "original": "5 (0,005)"
+            },
+            "2020": {
+                "count": 4,
+                "rate": 0.004,
+                "original": "4 (0,004)"
+            },
+            "2021": {
+                "count": 11,
+                "rate": 0.01,
+                "original": "11 (0,010)"
+            },
+            "2022": {
+                "count": 13,
+                "rate": 0.011,
+                "original": "13 (0,011)"
+            },
+            "2023": {
+                "count": 10,
+                "rate": 0.01,
+                "original": "10 (0,01)"
+            },
+            "2024": {
+                "count": 11,
+                "rate": 0.01,
+                "original": "11 (0,01)"
+            },
+            "2025": {
+                "count": 6,
+                "rate": 0.004,
+                "original": "6 (0,004)"
+            },
+            "column_0": "3.4. Üniversite-İş Dünyası İşbirlikli Ulusal ve Uluslararası Patent Belge Sayısı"
+        },
+        {
+            "2019": {
+                "count": 2,
+                "rate": 0.002,
+                "original": "2 (0,002)"
+            },
+            "2020": {
+                "count": 1,
+                "rate": 0.001,
+                "original": "1 (0,001)"
+            },
+            "2021": {
+                "count": 2,
+                "rate": 0.002,
+                "original": "2 (0,002)"
+            },
+            "2022": "-",
+            "2023": "-",
+            "2024": "-",
+            "2025": "-",
+            "column_0": "3.5. Uluslararası İşbirlikli Ulusal ve Uluslararası Patent Belge Sayısı"
+        },
+        {
+            "2019": "9.878.994,73 ₺",
+            "2020": "16.978.533,92 ₺",
+            "2021": "22.298.738,56 ₺",
+            "2022": "22.639.852,59 ₺",
+            "2023": "35.871.043,71 ₺",
+            "2024": "32.701.240,01 ₺",
+            "2025": "60.331.902,60 ₺",
+            "column_0": "3.6. Kamu Fonları Kapsamında Üniversite – İş Dünyası İşbirliği ile Yapılan Ar-Ge ve Yenilik Projelerinden Alınan Fon Tutarı"
+        },
+        {
+            "2019": 41,
+            "2020": 32,
+            "2021": 30,
+            "2022": 24,
+            "2023": 27,
+            "2024": 48,
+            "2025": 55,
+            "column_0": "3.7. Kamu Fonları Kapsamında Üniversite – İş Dünyası İşbirliği ile Yapılan Ar-Ge ve Yenilik Projeleri Sayısı"
+        },
+        {
+            "2019": {
+                "count": 0.04,
+                "rate": 1549,
+                "original": " 0,04 (1549)"
+            },
+            "2020": {
+                "count": 0.043,
+                "rate": 2190,
+                "original": "0,043 (2190)"
+            },
+            "2021": {
+                "count": 0.049,
+                "rate": 2503,
+                "original": "0,049 (2503)"
+            },
+            "2022": {
+                "count": 0.051,
+                "rate": 2422,
+                "original": "0,051 (2422)"
+            },
+            "2023": {
+                "count": 0.05,
+                "rate": 2266,
+                "original": "0,050 (2266)"
+            },
+            "2024": {
+                "count": 0.06,
+                "rate": 3130,
+                "original": "0,060 (3130)"
+            },
+            "2025": {
+                "count": 0.064,
+                "rate": 2903,
+                "original": "0,064 (2903)"
+            },
+            "column_0": "3.8. Uluslararası Öğrenci Oranı "
+        },
+        {
+            "2019": {
+                "count": 0.02,
+                "rate": 22,
+                "original": "0,02 (22)"
+            },
+            "2020": {
+                "count": 0.02,
+                "rate": 24,
+                "original": "0,02 (24)"
+            },
+            "2021": {
+                "count": 0.02,
+                "rate": 20,
+                "original": "0,02 (20)"
+            },
+            "2022": {
+                "count": 0.02,
+                "rate": 21,
+                "original": "0,02 (21)"
+            },
+            "2023": {
+                "count": 0.02,
+                "rate": 20,
+                "original": "0,02 (20)"
+            },
+            "2024": {
+                "count": 0.01,
+                "rate": 17,
+                "original": "0,01 (17)"
+            },
+            "2025": {
+                "count": 0.01,
+                "rate": 16,
+                "original": "0,01 (16)"
+            },
+            "column_0": "3.9. Uluslararası Öğretim Üyesi Oranı "
+        },
+        {
+            "2019": 14,
+            "2020": 2,
+            "2021": 35,
+            "2022": 96,
+            "2023": 66,
+            "2024": 86,
+            "2025": 31,
+            "column_0": "3.10. Dolaşımdaki Öğretim Üyesi Sayısı"
+        },
+        {
+            "2019": 10,
+            "2020": 12,
+            "2021": 16,
+            "2022": 14,
+            "2023": 12,
+            "2024": 5,
+            "2025": 3,
+            "column_0": "3.11. TÜBİTAK 2244 Sanayi Doktora Programı Öğrenci Sayısı"
+        }
+    ]
+}
