@@ -3,7 +3,6 @@ import { Loader, ChevronsUpDownIcon, CheckIcon, SearchIcon } from 'lucide-vue-ne
 import * as z from 'zod'
 import { toTypedSchema } from '@vee-validate/zod'
 import type { GenericObject, SubmissionHandler } from 'vee-validate'
-import type { Article } from '@/types'
 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup } from '@/components/ui/select'
@@ -83,24 +82,15 @@ const searchJournals = async (query: string) => {
 
     try {
         isSearching.value = true
-        const response = await useRequest<{ rows: { id: string; name: string }[] }>(`/manager/journals`, {
+        // idas-api: GET /journals -> { rows, pagination }
+        const response = await useRequest<{ rows: { id: string; name: string }[] }>(`/journals`, {
             query: {
                 search: query,
-                attributes: 'id,name',
-                limit: 5,
-                onlyData: true
+                page: 1,
+                limit: 5
             }
         })
-        // Response structure'ını kontrol et ve doğru şekilde set et
-        if (response && Array.isArray(response)) {
-            journals.value = response
-        } else if (response && (response as any).data && Array.isArray((response as any).data)) {
-            journals.value = (response as any).data
-        } else if (response && response.rows && Array.isArray(response.rows)) {
-            journals.value = response.rows
-        } else {
-            journals.value = []
-        }
+        journals.value = response?.rows ?? []
     } catch (error) {
         journals.value = []
     } finally {
@@ -112,51 +102,26 @@ const onSubmit: SubmissionHandler<GenericObject, GenericObject, unknown> = async
     try {
         isLoading.value = true
 
-        // Önce makaleyi oluştur
-        const articleResponse = await useRequest<Article>('/manager/articles', {
+        // idas-api: POST /articles -> { article } (WoS Id, externalIds olarak gönderilir)
+        const response = await useRequest<{ article: { id: string } }>('/articles', {
             method: 'POST',
-            body: values
+            body: {
+                title: values.title,
+                publicationYear: values.year,
+                journalId: values.journalId,
+                hasNationalCollaboration: values.hasNationalCollaboration,
+                hasInternationalCollaboration: values.hasInternationalCollaboration,
+                hasIndustryCollaboration: values.hasIndustryCollaboration,
+                externalIds: values.wosId ? [{ source: 'WOS', externalId: values.wosId }] : []
+            }
         })
 
-        // Sonra JournalMetrics kaydı oluştur
-        if (articleResponse.id && values.journalId && values.year) {
-            try {
-                console.log('JournalMetrics oluşturuluyor...', {
-                    journalId: values.journalId,
-                    year: values.year
-                })
-
-                await useRequest('/manager/journal-metrics', {
-                    method: 'POST',
-                    body: {
-                        journalId: values.journalId,
-                        year: values.year,
-                        qValue: 'Q4', // Varsayılan değer
-                        isPenalized: false,
-                        impactFactor: 0,
-                        percentile: 0,
-                        isTopTenPercent: false
-                    }
-                })
-
-                console.log('JournalMetrics başarıyla oluşturuldu')
-            } catch (metricsError) {
-                console.warn('JournalMetrics oluşturulamadı:', metricsError)
-                // Sessizce devam et, kullanıcıya gösterme
-            }
-        }
-
-        console.log('Makale başarıyla oluşturuldu:', articleResponse.id)
-
         isLoading.value = false
 
-        navigateTo(`/dashboard/articles/${articleResponse.id}?success=created`)
+        navigateTo(`/dashboard/articles/${response.article.id}?success=created`)
         resetForm()
     } catch (error) {
-        console.error('Makale oluşturma hatası:', error)
         isLoading.value = false
-
-        // Hata durumunda sadece console'a yaz, kullanıcıya gösterme
         console.error('Makale oluşturma hatası:', error)
     }
 }

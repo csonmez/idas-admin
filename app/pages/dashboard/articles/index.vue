@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Article, IApiResponse } from '@/types'
+import type { ArticleListResponse, ArticleListRow } from '@/types'
 import { createColumnHelper } from '@tanstack/vue-table'
 import { View, CirclePlus } from 'lucide-vue-next'
 import { h, resolveComponent } from 'vue'
@@ -22,7 +22,7 @@ const filterableColumns = ref([
     }
 ])
 const search = ref('')
-const columnHelper = createColumnHelper<Article>()
+const columnHelper = createColumnHelper<ArticleListRow>()
 const columns = [
     columnHelper.accessor('title', {
         header: () => h('div', { class: 'p-2 min-w-64' }, 'Makale İsmi'),
@@ -36,7 +36,7 @@ const columns = [
                 row.getValue('title')
             )
     }),
-    columnHelper.accessor('journal', {
+    columnHelper.accessor('journalName', {
         header: () => h('div', { class: 'p-2 min-w-64' }, 'Dergi'),
         cell: ({ row }) =>
             h(
@@ -45,10 +45,10 @@ const columns = [
                     class: 'text-wrap leading-relaxed p-2 min-w-64',
                     style: 'overflow-wrap: break-word; word-break: break-word;'
                 },
-                row.original.journal?.name || '-'
+                row.original.journalName || '-'
             )
     }),
-    columnHelper.accessor('year', {
+    columnHelper.accessor('publicationYear', {
         header: () => h('div', { class: 'p-2' }, 'Yıl'),
         cell: ({ row }) =>
             h(
@@ -57,12 +57,12 @@ const columns = [
                     class: 'text-wrap leading-relaxed p-2 min-w-20',
                     style: 'overflow-wrap: break-word; word-break: break-word;'
                 },
-                row.original.year || '-'
+                row.original.publicationYear || '-'
             )
     }),
-    columnHelper.accessor('journalMetric.qValue', {
+    columnHelper.accessor('qValue', {
         header: () => h('div', { class: 'p-2 text-right' }, 'Q Değeri'),
-        cell: ({ row }) => h('div', { class: 'p-2 text-right' }, row.original.journalMetric?.qValue || '-')
+        cell: ({ row }) => h('div', { class: 'p-2 text-right' }, row.original.qValue || '-')
     }),
     columnHelper.display({
         id: 'actions',
@@ -79,24 +79,35 @@ const columns = [
     })
 ]
 const getArticles = async () => {
-    // isLoading.value = true
-    const response = await useRequest<IApiResponse<Article>>('/manager/articles', {
+    // idas-api admin listesi: GET /articles -> { rows, pagination }
+    return await useRequest<ArticleListResponse>('/articles', {
         method: 'GET',
         query: {
             page: currentPage.value,
+            limit: 10,
             search: search.value.length >= 3 ? search.value : undefined,
-            select: 'id,title,year,journal,journalMetric,createdAt',
-            journalSelect: 'id,name',
-            journalMetricSelect: 'id,qValue'
+            sortBy: 'createdAt',
+            sortOrder: 'desc'
         }
     })
-    // isLoading.value = false
-
-    return response
 }
 
 const { data: articles } = await useAsyncData('articles', getArticles, {
     watch: [currentPage, search]
+})
+
+// idas-api pagination'ını DataTable'ın beklediği (totalItems/hasPrevPage/hasNextPage) yapıya çevir
+const tablePagination = computed(() => {
+    const pagination = articles.value?.pagination
+    if (!pagination) return undefined
+    return {
+        totalItems: pagination.total,
+        totalPages: pagination.totalPages,
+        currentPage: pagination.page,
+        itemsPerPage: pagination.limit,
+        hasPrevPage: pagination.page > 1,
+        hasNextPage: pagination.page < pagination.totalPages
+    }
 })
 
 watch(search, (newValue, oldValue) => {
@@ -134,7 +145,7 @@ watch(search, (newValue, oldValue) => {
                         v-model:search="search"
                         :data="articles?.rows || []"
                         :columns="columns"
-                        :api-pagination="articles?.pagination"
+                        :api-pagination="tablePagination"
                         :filterable-columns="filterableColumns"
                         class="min-w-[800px] h-full"
                     />

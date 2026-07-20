@@ -1,96 +1,72 @@
 <script setup lang="ts">
-import { BookOpen, Award, Users, CirclePlus, Loader, Trash2, Clock, Globe, Home, Factory, MoreHorizontal, Edit } from 'lucide-vue-next'
+import { BookOpen, Award, Users, Trash2, Clock, Globe, Home, Factory, MoreHorizontal, Edit } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Input } from '@/components/ui/input'
-import type { Article, User } from '@/types'
-import { ref, computed, watch } from 'vue'
+import type { ArticleDetailResponse } from '@/types'
+import { ref, computed } from 'vue'
+
+// idas-api user-assignments cevabı: UserArticleRow (kayıt + kullanıcı ad/soyad/e-posta)
+interface UserAssignment {
+    id: string
+    userId: string
+    articleId: string
+    verifiedAt: string | null
+    deletedAt: string | null
+    userName: string
+    userSurname: string
+    userEmail: string
+}
 
 const route = useRoute()
 const articleId = route.params.id as string
 
 const isDeleting = ref(false)
 const showDeleteDialog = ref(false)
-const isOpenUserSearchDialog = ref(false)
 const showRemoveDialog = ref(false)
 const pendingRemoveId = ref<string | null>(null)
-const searchUser = ref('')
-const users = ref<User[]>([])
-const isLoadingUser = ref('')
-const article = computed(() => data.value)
-const authorsList = computed(() => {
-    return article.value?.userArticles || []
+
+// idas-api admin detay: GET /articles/:id -> { article, externalIds, keywords }
+const {
+    data,
+    pending: loading,
+    error,
+    refresh
+} = await useAsyncData(`article-${articleId}`, async () => {
+    return await useRequest<ArticleDetailResponse>(`/articles/${articleId}`, { method: 'GET' })
 })
 
-const searchUsers = async () => {
-    if (searchUser.value.length < 3) return
-    try {
-        const response = await useRequest<{ rows: User[] }>('/manager/users', {
-            method: 'GET',
-            query: {
-                search: searchUser.value,
-                limit: 5
-            }
-        })
-        if (response && response.rows) {
-            users.value = response.rows
-        } else if (response && Array.isArray(response)) {
-            users.value = response
-        } else {
-            users.value = []
-        }
-    } catch (error) {
-        users.value = []
-    }
-}
-const addUserToArticle = async (userId: string) => {
-    try {
-        isLoadingUser.value = userId
-        await useRequest('/manager/user-articles', {
-            method: 'POST',
-            body: { userId, articleId: route.params.id }
-        })
-        isOpenUserSearchDialog.value = false
-        searchUser.value = ''
-        isLoadingUser.value = ''
-        users.value = []
-        await refresh()
-    } catch (err: any) {
-        isLoadingUser.value = ''
-        if (err.data && err.data.code === 'ERRORx007') {
-            $toast({
-                title: 'Yazar zaten ekli',
-                description: 'Bu kullanıcı makaleye zaten eklenmiş.',
-                variant: 'destructive'
-            })
-        }
-    }
-}
-const getMainAcademicUnit = (user: any) => {
-    if (!user?.userAcademicUnits) return ''
-    const mainUnit = user.userAcademicUnits.find((unit: any) => unit.affiliationType === 'MAIN')
-    if (!mainUnit?.academicUnit) return ''
-    return `${mainUnit.academicUnit.name} - ${mainUnit.academicUnit.type || 'Birim'}`
-}
+// Makaleye atanmış kullanıcılar: GET /articles/:id/user-assignments -> { assignments }
+const { data: assignmentsData, refresh: refreshAssignments } = await useAsyncData(`article-${articleId}-assignments`, async () => {
+    return await useRequest<{ assignments: UserAssignment[] }>(`/articles/${articleId}/user-assignments`, { method: 'GET' })
+})
+
+const article = computed(() => data.value?.article)
+const authorsList = computed(() => assignmentsData.value?.assignments ?? [])
+const wosId = computed(() => data.value?.externalIds?.find((e) => e.source === 'WOS')?.externalId ?? null)
+
+// TODO: "Yazar ekle" için kullanıcı arama gerekiyor; idas-api'de henüz kullanıcı arama
+// endpoint'i yok (eski /manager/users kalktı). Endpoint eklenince POST
+// /articles/:id/user-assignments ({ userId }) ile buraya ekleme dialogu geri gelecek.
+
 const confirmRemoveAuthor = (userArticleId: string) => {
     pendingRemoveId.value = userArticleId
     showRemoveDialog.value = true
 }
 
-const removeAuthor = async (authorId: string) => {
+const removeAuthor = async (assignmentId: string) => {
     try {
-        await useRequest(`/manager/user-articles/${authorId}`, {
+        await useRequest(`/articles/${articleId}/user-assignments/${assignmentId}`, {
             method: 'DELETE'
         })
         $toast({
             title: 'Yazar kaldırıldı',
             description: 'Yazar makale yazarları listesinden kaldırıldı.'
         })
-        await refresh()
+        await refreshAssignments()
     } catch (error: any) {
         $toast({
             title: 'Hata',
@@ -99,10 +75,11 @@ const removeAuthor = async (authorId: string) => {
         })
     }
 }
+
 const deleteArticle = async () => {
     try {
         isDeleting.value = true
-        await useRequest(`/manager/articles/${articleId}`, {
+        await useRequest(`/articles/${articleId}`, {
             method: 'DELETE'
         })
         $toast({
@@ -121,35 +98,6 @@ const deleteArticle = async () => {
         showDeleteDialog.value = false
     }
 }
-
-const {
-    data,
-    pending: loading,
-    error,
-    refresh
-} = await useAsyncData(`article-${articleId}`, async () => {
-    return await useRequest<Article>(`/manager/articles/${articleId}`, {
-        method: 'GET',
-        query: {
-            select: 'id,title,year,journal,journalMetric,hasNationalCollaboration,hasInternationalCollaboration,hasIndustryCollaboration,createdAt,updatedAt,userArticles,userArticles.deletedAt,userArticles.user,userArticles.user.userAcademicUnits,userArticles.user.userAcademicUnits.academicUnit'
-        }
-    })
-})
-
-let searchTimeout: any = null
-watch(searchUser, () => {
-    if (searchTimeout) {
-        clearTimeout(searchTimeout)
-    }
-
-    if (searchUser.value.length >= 3) {
-        searchTimeout = setTimeout(() => {
-            searchUsers()
-        }, 300) // 300ms debounce
-    } else {
-        users.value = []
-    }
-})
 </script>
 
 <template>
@@ -180,18 +128,18 @@ watch(searchUser, () => {
                         <div>
                             <div class="flex items-center gap-2">
                                 <CardTitle class="text-xl">{{ article?.title }}</CardTitle>
-                                <Badge v-if="article?.year" variant="secondary" class="text-xs">
-                                    {{ article.year }}
+                                <Badge v-if="article?.publicationYear" variant="secondary" class="text-xs">
+                                    {{ article.publicationYear }}
                                 </Badge>
                             </div>
                             <CardDescription>
                                 <a
-                                    v-if="article?.wosId"
-                                    :href="`https://www.webofscience.com/wos/woscc/full-record/${article.wosId}`"
+                                    v-if="wosId"
+                                    :href="`https://www.webofscience.com/wos/woscc/full-record/${wosId}`"
                                     target="_blank"
                                     class="text-blue-600 hover:text-blue-800 hover:underline"
                                 >
-                                    WoS ID: {{ article.wosId }}
+                                    WoS ID: {{ wosId }}
                                 </a>
                                 <span v-else class="text-muted-foreground">WoS ID: Mevcut değil</span>
                             </CardDescription>
@@ -224,13 +172,13 @@ watch(searchUser, () => {
                                 <div class="flex items-center space-x-2">
                                     <BookOpen class="h-4 w-4 text-muted-foreground" />
                                     <span class="text-sm font-medium">Dergi:</span>
-                                    <span class="text-sm">{{ article?.journal?.name || 'Bilinmiyor' }}</span>
+                                    <span class="text-sm">{{ article?.journalName || 'Bilinmiyor' }}</span>
                                 </div>
                                 <div class="flex items-center space-x-2">
                                     <Award class="h-4 w-4 text-muted-foreground" />
                                     <span class="text-sm font-medium">Q Değeri:</span>
                                     <Badge variant="outline" class="bg-emerald-50 text-emerald-700 border-emerald-200">
-                                        {{ article?.journalMetric?.qValue || 'Q4' }}
+                                        {{ article?.qValue || '-' }}
                                     </Badge>
                                 </div>
                                 <div class="flex items-center space-x-2">
@@ -291,33 +239,29 @@ watch(searchUser, () => {
                 </CardContent>
             </Card>
 
-            <!-- Yazarlar -->
+            <!-- Atanmış Yazarlar (kurum içi kullanıcılar) -->
             <Card class="w-full max-w-full">
                 <CardHeader>
-                    <div class="flex items-center justify-between">
-                        <CardTitle class="flex items-center space-x-2">
-                            <Users class="h-5 w-5" />
-                            <span>Yazarlar ({{ authorsList.length }})</span>
-                        </CardTitle>
-                        <Button variant="outline" size="sm" @click="isOpenUserSearchDialog = true" class="h-8 w-8 p-0" aria-label="Yazar ekle">
-                            <CirclePlus class="h-4 w-4" />
-                        </Button>
-                    </div>
+                    <CardTitle class="flex items-center space-x-2">
+                        <Users class="h-5 w-5" />
+                        <span>Atanmış Yazarlar ({{ authorsList.length }})</span>
+                    </CardTitle>
+                    <!-- TODO: Yazar ekleme butonu, idas-api'ye kullanıcı arama endpoint'i eklenince geri gelecek -->
                 </CardHeader>
                 <CardContent>
-                    <div v-if="authorsList.length === 0" class="text-center py-8 text-muted-foreground">Bu makale için henüz yazar bilgisi bulunmuyor.</div>
+                    <div v-if="authorsList.length === 0" class="text-center py-8 text-muted-foreground">Bu makaleye atanmış kullanıcı bulunmuyor.</div>
                     <div v-else class="space-y-3">
-                        <div v-for="author in authorsList" :key="author.id" class="flex items-center justify-between p-3 border rounded-lg transition-opacity" :class="author.deletedAt ? 'opacity-50 bg-red-50' : ''">
+                        <div v-for="author in authorsList" :key="author.id" class="flex items-center justify-between p-3 border rounded-lg transition-opacity">
                             <div class="flex-1 flex items-center gap-2">
                                 <div>
-                                    <button @click="!author.deletedAt && navigateTo(`/dashboard/academicians/${author.user?.id}`)" :class="!author.deletedAt ? 'hover:text-blue-600 cursor-pointer' : 'cursor-default'" class="text-left transition-colors">
-                                        <p class="font-medium" :class="author.deletedAt ? 'line-through text-muted-foreground' : ''">{{ formatUserName(author?.user || null) }}</p>
+                                    <button @click="navigateTo(`/dashboard/academicians/${author.userId}`)" class="text-left transition-colors hover:text-blue-600 cursor-pointer">
+                                        <p class="font-medium">{{ author.userName }} {{ author.userSurname }}</p>
                                     </button>
-                                    <p class="text-sm text-muted-foreground mt-1">{{ getMainAcademicUnit(author.user) }}</p>
+                                    <p class="text-sm text-muted-foreground mt-1">{{ author.userEmail }}</p>
                                 </div>
-                                <Badge v-if="author.deletedAt" variant="destructive" class="text-xs ml-2">Silindi</Badge>
+                                <Badge v-if="author.verifiedAt" variant="outline" class="text-xs ml-2 bg-emerald-50 text-emerald-700 border-emerald-200">Doğrulanmış</Badge>
                             </div>
-                            <Button v-if="!author.deletedAt" variant="ghost" size="sm" @click="confirmRemoveAuthor(author.id)" class="h-8 w-8 p-0 text-red-600 hover:text-red-800 hover:bg-red-50" aria-label="Yazarı kaldır">
+                            <Button variant="ghost" size="sm" @click="confirmRemoveAuthor(author.id)" class="h-8 w-8 p-0 text-red-600 hover:text-red-800 hover:bg-red-50" aria-label="Yazarı kaldır">
                                 <Trash2 class="h-4 w-4" />
                             </Button>
                         </div>
@@ -345,38 +289,6 @@ watch(searchUser, () => {
                         {{ isDeleting ? 'Siliniyor...' : 'Makaleyi Sil' }}
                     </Button>
                 </DialogFooter>
-            </DialogContent>
-        </Dialog>
-
-        <!-- Yazar Ekleme Dialog'u -->
-        <Dialog :open="isOpenUserSearchDialog" @update:open="isOpenUserSearchDialog = false">
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Akademisyen Arama</DialogTitle>
-                    <DialogDescription>Arama yapmak için en az 3 karakter yazınız.</DialogDescription>
-                </DialogHeader>
-                <div class="flex flex-col items-center w-full">
-                    <Input v-model="searchUser" type="text" class="w-full" placeholder="Arama..." />
-
-                    <div v-if="users?.length" class="mt-4 w-full bg-white p-4 rounded-lg shadow-md">
-                        <div class="max-h-64 overflow-y-auto">
-                            <ul class="divide-y divide-gray-200">
-                                <li v-for="user in users" :key="user.id" class="flex items-center justify-between py-2">
-                                    <div class="flex flex-col">
-                                        <span class="text-gray-700">{{ user.name || '' }} {{ user.surname || '' }}</span>
-                                        <small class="text-gray-500">{{ user.email || '' }}</small>
-                                    </div>
-                                    <div class="flex items-center">
-                                        <Button size="sm" variant="outline" :disabled="isLoadingUser === user.id" @click="addUserToArticle(user.id)">
-                                            <Loader v-if="isLoadingUser === user.id" class="h-4 w-4 mr-2 animate-spin" />
-                                            <span v-else>Ekle</span>
-                                        </Button>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
             </DialogContent>
         </Dialog>
 

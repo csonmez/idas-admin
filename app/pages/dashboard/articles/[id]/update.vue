@@ -3,7 +3,7 @@ import { Loader, ChevronsUpDownIcon, CheckIcon, SearchIcon } from 'lucide-vue-ne
 import * as z from 'zod'
 import { toTypedSchema } from '@vee-validate/zod'
 import type { GenericObject, SubmissionHandler } from 'vee-validate'
-import type { Article } from '@/types'
+import type { ArticleDetailResponse } from '@/types'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -85,24 +85,15 @@ const searchJournals = async (query: string) => {
 
     try {
         isSearching.value = true
-        const response = await useRequest<{ rows: { id: string; name: string }[] }>(`/manager/journals`, {
+        // idas-api: GET /journals -> { rows, pagination }
+        const response = await useRequest<{ rows: { id: string; name: string }[] }>(`/journals`, {
             query: {
                 search: query,
-                attributes: 'id,name',
-                limit: 5,
-                onlyData: true
+                page: 1,
+                limit: 5
             }
         })
-        // Response structure'ını kontrol et ve doğru şekilde set et
-        if (response && Array.isArray(response)) {
-            journals.value = response
-        } else if (response && (response as any).data && Array.isArray((response as any).data)) {
-            journals.value = (response as any).data
-        } else if (response && response.rows && Array.isArray(response.rows)) {
-            journals.value = response.rows
-        } else {
-            journals.value = []
-        }
+        journals.value = response?.rows ?? []
     } catch (error) {
         journals.value = []
     } finally {
@@ -114,9 +105,18 @@ const onSubmit: SubmissionHandler<GenericObject, GenericObject, unknown> = async
     try {
         isLoading.value = true
 
-        const response = await useRequest<Article>(`/manager/articles/${articleId}`, {
+        // idas-api: PATCH /articles/:id -> { article }
+        // Not: externalIds güncellemesi bilinçli olarak gönderilmiyor (WoS Id değişimi ayrı konu)
+        await useRequest(`/articles/${articleId}`, {
             method: 'PATCH',
-            body: values
+            body: {
+                title: values.title,
+                publicationYear: values.year,
+                journalId: values.journalId,
+                hasNationalCollaboration: values.hasNationalCollaboration,
+                hasInternationalCollaboration: values.hasInternationalCollaboration,
+                hasIndustryCollaboration: values.hasIndustryCollaboration
+            }
         })
 
         isLoading.value = false
@@ -124,26 +124,22 @@ const onSubmit: SubmissionHandler<GenericObject, GenericObject, unknown> = async
         navigateTo(`/dashboard/articles/${articleId}?success=updated`)
         resetForm()
     } catch (error) {
-        console.error('Makale güncelleme hatası:', error)
         isLoading.value = false
-
-        // Hata durumunda sadece console'a yaz, kullanıcıya gösterme
         console.error('Makale güncelleme hatası:', error)
     }
 }
 
-const { data: article } = await useAsyncData(
+// idas-api: GET /articles/:id -> { article, externalIds, keywords }
+const { data: detailData } = await useAsyncData(
     `update-article-${articleId}`,
-    () =>
-        useRequest<Article>(`/manager/articles/${articleId}`, {
-            query: {
-                includeJournal: true
-            }
-        }),
+    () => useRequest<ArticleDetailResponse>(`/articles/${articleId}`),
     {
         server: true
     }
 )
+
+const article = computed(() => detailData.value?.article)
+const wosExternalId = computed(() => detailData.value?.externalIds?.find((e) => e.source === 'WOS')?.externalId ?? '')
 
 watchEffect(() => {
     if (selectedJournalId.value) {
@@ -181,16 +177,16 @@ watch(journalPopoverOpen, (isOpen) => {
     }
 })
 
-// Article yüklendiğinde form değerlerini ve dergi bilgilerini ayarla
+// Article yüklendiğinde form değerlerini ve dergi bilgilerini ayarla (idas-api: düz journalId + journalName)
 watchEffect(() => {
-    if (article.value?.journalId && article.value?.journal?.name) {
-        const journalId = article.value.journal?.id || article.value.journalId
+    if (article.value?.journalId && article.value?.journalName) {
+        const journalId = article.value.journalId
         selectedJournalId.value = journalId
-        selectedJournalName.value = article.value.journal.name
+        selectedJournalName.value = article.value.journalName
         if (!journals.value.some((j) => j.id === journalId)) {
             journals.value.push({
                 id: journalId,
-                name: article.value.journal.name
+                name: article.value.journalName
             })
         }
     }
@@ -202,9 +198,9 @@ const initialValues = computed(() => {
 
     return {
         title: article.value.title || '',
-        wosId: article.value.wosId || '',
-        journalId: article.value.journal?.id || article.value.journalId || '',
-        year: article.value.year || 2023,
+        wosId: wosExternalId.value || '',
+        journalId: article.value.journalId || '',
+        year: article.value.publicationYear || 2023,
         hasNationalCollaboration: article.value.hasNationalCollaboration || false,
         hasInternationalCollaboration: article.value.hasInternationalCollaboration || false,
         hasIndustryCollaboration: article.value.hasIndustryCollaboration || false
@@ -220,13 +216,13 @@ watch(
             const journal = journals.value.find((j) => j.id === newJournalId)
             if (journal) {
                 selectedJournalName.value = journal.name
-            } else if (article.value?.journal?.id === newJournalId && article.value?.journal?.name) {
-                selectedJournalName.value = article.value.journal.name
+            } else if (article.value?.journalId === newJournalId && article.value?.journalName) {
+                selectedJournalName.value = article.value.journalName
                 // Eğer journals listesinde yoksa ekle
                 if (!journals.value.some((j) => j.id === newJournalId)) {
                     journals.value.push({
                         id: newJournalId,
-                        name: article.value.journal.name
+                        name: article.value.journalName
                     })
                 }
             }
