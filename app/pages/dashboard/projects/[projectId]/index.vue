@@ -8,121 +8,64 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { User as UserIcon, FileText, Wallet, CirclePlus, Loader, Trash2, MoreHorizontal, Edit } from 'lucide-vue-next'
-import { Badge } from '@/components/ui/badge'
-import type { Project, User } from '@/types'
-import { ref, watch } from 'vue'
+import type { ProjectDetailResponse, ProjectIncomingBudgetsResponse } from '@/types'
+import { ref, computed, watch } from 'vue'
 
 const route = useRoute()
 const router = useRouter()
 const projectId = route.params.projectId as string
 
-const project = computed(() => data.value)
-
+// idas-api admin detay: GET /projects/:id -> { project, users }
 const { data, pending, error, refresh } = await useAsyncData(`project-${projectId}`, async () => {
-    return await useRequest<Project>(`/manager/projects/${projectId}`, {
+    return await useRequest<ProjectDetailResponse>(`/projects/${projectId}`, { method: 'GET' })
+})
+
+const project = computed(() => data.value?.project ?? null)
+
+// Aktarılan bütçeler ayrı uçtan: GET /projects/:id/incoming-budgets -> { rows, pagination }
+const { data: budgetsData, refresh: refreshBudgets } = await useAsyncData(`project-${projectId}-budgets`, async () => {
+    return await useRequest<ProjectIncomingBudgetsResponse>(`/projects/${projectId}/incoming-budgets`, {
         method: 'GET',
-        query: {
-            select: 'id,title,type,totalBudget,incomingBudget,year,projectType,startDate,endDate,incentiveType,incentiveAmount,createdAt,updatedAt,userProjects,userProjects.deletedAt,userProjects.user,userProjects.user.userAcademicUnits,userProjects.user.userAcademicUnits.academicUnit,projectIncomingBudgets'
-        }
+        query: { page: 1, limit: 100, sortBy: 'year', sortOrder: 'asc' }
     })
 })
 
 const budgetTransfers = computed(() => {
-    const items = project.value?.projectIncomingBudgets ?? []
+    const items = budgetsData.value?.rows ?? []
     return [...items].sort((a, b) => a.year - b.year)
 })
 
-// Toplam aktarılan bütçe
+// Toplam aktarılan bütçe (backend'in hesapladığı incomingBudgetTotal esas alınır)
 const totalTransferredBudget = computed(() => {
-    return budgetTransfers.value.reduce((total, t) => total + Number(t.amount), 0)
+    const total = project.value?.incomingBudgetTotal
+    if (total !== undefined && total !== null) return Number(total)
+    return budgetTransfers.value.reduce((sum, t) => sum + Number(t.amount), 0)
 })
 
-// Proje yürütücüsü (userProjects[0].user)
-const executorDeletedLocally = ref(false)
-const executorUserProject = computed(() => project.value?.userProjects?.[0] ?? null)
-const projectExecutor = computed(() => executorUserProject.value?.user ?? null)
-const isExecutorDeleted = computed(() => executorDeletedLocally.value || !!executorUserProject.value?.deletedAt)
+// Proje yürütücüsü (users[0])
+const projectExecutor = computed(() => data.value?.users?.[0] ?? null)
 
-// Ana akademik birim metni (fakülte - bölüm - anabilim dalı)
-const mainAcademicUnitText = computed(() => {
-    const user = projectExecutor.value
-    if (!user?.userAcademicUnits) return ''
-    const main = user.userAcademicUnits.find((u: any) => u.affiliationType === 'MAIN')
-    if (!main) return ''
-    const parts = [main.faculty?.name, main.department?.name, main.discipline?.name].filter(Boolean)
-    return parts.join(' / ')
-})
+// TODO: "Proje yürütücüsü ekle" için kullanıcı arama gerekiyor; idas-api'de henüz
+// kullanıcı arama endpoint'i yok (eski /manager/users kalktı). Endpoint eklenince
+// POST /projects/:id/users ({ userId, projectRoleId? }) ile ekleme dialogu geri gelecek.
 
-// Kullanıcı ekleme (tek kullanıcı - proje yürütücüsü)
-const isOpenUserSearchDialog = ref(false)
-const searchUser = ref('')
-const users = ref<User[]>([])
-const isLoadingUser = ref('')
-
-const searchUsers = async () => {
-    if (searchUser.value.length < 3) return
-    try {
-        const response = await useRequest<{ rows: User[] }>('/manager/users', {
-            method: 'GET',
-            query: {
-                search: searchUser.value,
-                limit: 5
-            }
-        })
-        if (response && response.rows) {
-            users.value = response.rows
-        } else if (response && Array.isArray(response)) {
-            users.value = response
-        } else {
-            users.value = []
-        }
-    } catch {
-        users.value = []
-    }
-}
-
-const addUserToProject = async (userId: string) => {
-    try {
-        isLoadingUser.value = userId
-        await useRequest('/manager/user-projects', {
-            method: 'POST',
-            body: { userId, projectId }
-        })
-        isOpenUserSearchDialog.value = false
-        searchUser.value = ''
-        isLoadingUser.value = ''
-        users.value = []
-        await refresh()
-    } catch (err: any) {
-        isLoadingUser.value = ''
-        if (err.data && err.data.code === 'ERRORx007') {
-            $toast({
-                title: 'Kullanıcı zaten ekli',
-                description: 'Bu kullanıcı projeye zaten eklenmiş.',
-                variant: 'destructive'
-            })
-        }
-    }
-}
-
-const userProjectId = computed(() => project.value?.userProjects?.[0]?.id ?? null)
 const showRemoveExecutorDialog = ref(false)
 const showDeleteDialog = ref(false)
 const isDeleting = ref(false)
 
 const removeUserFromProject = async () => {
-    const id = userProjectId.value
-    if (!id) return
+    const userProjectId = projectExecutor.value?.userProjectId
+    if (!userProjectId) return
     try {
-        await useRequest(`/manager/user-projects/${id}`, {
+        await useRequest(`/user-projects/${userProjectId}`, {
             method: 'DELETE'
         })
         showRemoveExecutorDialog.value = false
-        executorDeletedLocally.value = true
         $toast({
             title: 'Proje yürütücüsü kaldırıldı',
             description: 'Proje yürütücüsü listeden kaldırıldı.'
         })
+        await refresh()
     } catch {
         $toast({
             title: 'Hata',
@@ -131,16 +74,6 @@ const removeUserFromProject = async () => {
         })
     }
 }
-
-let searchTimeout: ReturnType<typeof setTimeout> | null = null
-watch(searchUser, () => {
-    if (searchTimeout) clearTimeout(searchTimeout)
-    if (searchUser.value.length >= 3) {
-        searchTimeout = setTimeout(searchUsers, 300)
-    } else {
-        users.value = []
-    }
-})
 
 // Bütçe ekleme
 const currentYear = new Date().getFullYear()
@@ -162,7 +95,7 @@ const resetBudgetForm = () => {
 const deleteProject = async () => {
     try {
         isDeleting.value = true
-        await useRequest(`/manager/projects/${projectId}`, {
+        await useRequest(`/projects/${projectId}`, {
             method: 'DELETE'
         })
         $toast({
@@ -195,9 +128,10 @@ const addBudget = async () => {
     }
     try {
         isAddingBudget.value = true
-        await useRequest('/manager/project-incoming-budgets', {
+        // idas-api: POST /projects/:id/incoming-budgets ({ year, amount }) (projectId URL'den, mergeParams)
+        await useRequest(`/projects/${projectId}/incoming-budgets`, {
             method: 'POST',
-            body: { projectId, year, amount }
+            body: { year, amount }
         })
         $toast({
             title: 'Bütçe eklendi',
@@ -205,7 +139,7 @@ const addBudget = async () => {
         })
         isOpenBudgetDialog.value = false
         resetBudgetForm()
-        await refresh()
+        await Promise.all([refresh(), refreshBudgets()])
     } catch {
         $toast({
             title: 'Hata',
@@ -216,6 +150,10 @@ const addBudget = async () => {
         isAddingBudget.value = false
     }
 }
+
+watch(isOpenBudgetDialog, (open) => {
+    if (!open) resetBudgetForm()
+})
 </script>
 
 <template>
@@ -239,7 +177,7 @@ const addBudget = async () => {
 
         <!-- Proje içeriği -->
         <div v-else-if="project" class="space-y-4 md:space-y-6">
-            <!-- Proje Başlığı ve Durum Kartı -->
+            <!-- Proje Başlığı ve İşlemler Kartı -->
             <Card class="shadow-sm hover:shadow-md transition-shadow rounded-xl overflow-hidden">
                 <CardContent class="pt-2">
                     <div class="flex items-start justify-between gap-4">
@@ -265,7 +203,7 @@ const addBudget = async () => {
                 </CardContent>
             </Card>
 
-            <!-- Proje ve Proje Yürütücüsü Kartları -->
+            <!-- Proje ve Finansal Kartları -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 <!-- Proje Bilgileri -->
                 <div>
@@ -280,7 +218,19 @@ const addBudget = async () => {
                             <div class="space-y-3 sm:space-y-4">
                                 <div class="flex justify-between items-center gap-4">
                                     <span class="text-xs sm:text-sm text-muted-foreground shrink-0">Proje Türü</span>
-                                    <span class="text-sm sm:text-base font-medium text-right">{{ project.projectType?.name ?? '-' }}</span>
+                                    <span class="text-sm sm:text-base font-medium text-right">{{ project.projectTypeName ?? '-' }}</span>
+                                </div>
+                                <div class="flex justify-between items-center gap-4">
+                                    <span class="text-xs sm:text-sm text-muted-foreground shrink-0">Bölüm</span>
+                                    <span class="text-sm sm:text-base font-medium text-right">{{ project.departmentName ?? '-' }}</span>
+                                </div>
+                                <div v-if="project.projectStatusName" class="flex justify-between items-center gap-4">
+                                    <span class="text-xs sm:text-sm text-muted-foreground shrink-0">Durum</span>
+                                    <span class="text-sm sm:text-base font-medium text-right">{{ project.projectStatusName }}</span>
+                                </div>
+                                <div class="flex justify-between items-center gap-4">
+                                    <span class="text-xs sm:text-sm text-muted-foreground shrink-0">Yıl</span>
+                                    <span class="text-sm sm:text-base font-medium text-right">{{ project.year ?? '-' }}</span>
                                 </div>
                                 <div class="flex justify-between items-center gap-4">
                                     <span class="text-xs sm:text-sm text-muted-foreground shrink-0">Başlangıç</span>
@@ -350,33 +300,24 @@ const addBudget = async () => {
                 <div class="md:col-span-2">
                     <Card class="shadow-sm hover:shadow-md transition-shadow rounded-xl h-full flex flex-col">
                         <CardHeader>
-                            <div class="flex items-center justify-between">
-                                <CardTitle class="text-base sm:text-lg flex items-center gap-2">
-                                    <UserIcon class="h-4 w-4 flex-shrink-0" />
-                                    <span>Proje Yürütücüsü</span>
-                                </CardTitle>
-                                <Button v-if="!projectExecutor" variant="outline" size="sm" class="h-8 w-8 p-0" aria-label="Proje yürütücüsü ekle" @click="isOpenUserSearchDialog = true">
-                                    <CirclePlus class="h-4 w-4" />
-                                </Button>
-                            </div>
+                            <CardTitle class="text-base sm:text-lg flex items-center gap-2">
+                                <UserIcon class="h-4 w-4 flex-shrink-0" />
+                                <span>Proje Yürütücüsü</span>
+                            </CardTitle>
+                            <!-- TODO: Yürütücü ekleme butonu, idas-api'ye kullanıcı arama endpoint'i eklenince geri gelecek -->
                         </CardHeader>
                         <CardContent class="px-4 sm:px-5 pb-4 pt-0 flex-1">
-                            <div v-if="projectExecutor" class="p-4 rounded-lg border border-border/50 space-y-2 transition-opacity" :class="isExecutorDeleted ? 'opacity-50 bg-red-50' : 'bg-muted/40'">
+                            <div v-if="projectExecutor" class="p-4 rounded-lg border border-border/50 space-y-2 bg-muted/40">
                                 <div class="flex items-start justify-between gap-2">
-                                    <div class="min-w-0 flex-1 flex items-center gap-2">
-                                        <div>
-                                            <p class="font-semibold text-sm sm:text-base break-words" :class="isExecutorDeleted ? 'line-through text-muted-foreground' : ''">
-                                                <NuxtLink v-if="!isExecutorDeleted" :to="`/dashboard/academicians/${projectExecutor.id}`">{{ formatUserName(projectExecutor) }}</NuxtLink>
-                                                <span v-else>{{ formatUserName(projectExecutor) }}</span>
-                                            </p>
-                                            <p v-if="mainAcademicUnitText" class="text-xs sm:text-sm text-muted-foreground pt-1">
-                                                {{ mainAcademicUnitText }}
-                                            </p>
-                                        </div>
-                                        <Badge v-if="isExecutorDeleted" variant="destructive" class="text-xs ml-1">Silindi</Badge>
+                                    <div class="min-w-0 flex-1">
+                                        <p class="font-semibold text-sm sm:text-base break-words">
+                                            <NuxtLink :to="`/dashboard/academicians/${projectExecutor.userId}`">{{ projectExecutor.userName }} {{ projectExecutor.userSurname }}</NuxtLink>
+                                        </p>
+                                        <p v-if="projectExecutor.projectRoleName" class="text-xs sm:text-sm text-muted-foreground pt-1">
+                                            {{ projectExecutor.projectRoleName }}
+                                        </p>
                                     </div>
                                     <Button
-                                        v-if="!isExecutorDeleted"
                                         variant="ghost"
                                         size="sm"
                                         class="h-8 w-8 p-0 text-red-600 hover:text-red-800 hover:bg-red-50 shrink-0"
@@ -422,7 +363,7 @@ const addBudget = async () => {
                 <AlertDialogHeader>
                     <AlertDialogTitle>Proje yürütücüsünü kaldırmak istediğinize emin misiniz?</AlertDialogTitle>
                     <AlertDialogDescription>
-                        <strong>{{ projectExecutor ? formatUserName(projectExecutor) : '' }}</strong> proje yürütücüsü olarak kaldırılacak. Bu işlemi onaylıyor musunuz?
+                        <strong>{{ projectExecutor ? `${projectExecutor.userName} ${projectExecutor.userSurname}` : '' }}</strong> proje yürütücüsü olarak kaldırılacak. Bu işlemi onaylıyor musunuz?
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -433,16 +374,7 @@ const addBudget = async () => {
         </AlertDialog>
 
         <!-- Bütçe Ekleme Dialog'u -->
-        <Dialog
-            v-if="project"
-            :open="isOpenBudgetDialog"
-            @update:open="
-                (v) => {
-                    isOpenBudgetDialog = v
-                    if (!v) resetBudgetForm()
-                }
-            "
-        >
+        <Dialog v-if="project" v-model:open="isOpenBudgetDialog">
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Aktarılan Bütçe Ekle</DialogTitle>
@@ -478,35 +410,6 @@ const addBudget = async () => {
                         {{ isAddingBudget ? 'Ekleniyor...' : 'Ekle' }}
                     </Button>
                 </DialogFooter>
-            </DialogContent>
-        </Dialog>
-
-        <!-- Proje Yürütücüsü Ekleme Dialog'u -->
-        <Dialog v-if="project" :open="isOpenUserSearchDialog" @update:open="isOpenUserSearchDialog = false">
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Akademisyen Arama</DialogTitle>
-                    <DialogDescription>Arama yapmak için en az 3 karakter yazınız.</DialogDescription>
-                </DialogHeader>
-                <div class="flex flex-col items-center w-full">
-                    <Input v-model="searchUser" type="text" class="w-full" placeholder="Arama..." />
-                    <div v-if="users?.length" class="mt-4 w-full bg-white dark:bg-muted p-4 rounded-lg shadow-md">
-                        <div class="max-h-64 overflow-y-auto">
-                            <ul class="divide-y divide-gray-200 dark:divide-border">
-                                <li v-for="user in users" :key="user.id" class="flex items-center justify-between py-2">
-                                    <div class="flex flex-col">
-                                        <span class="text-gray-700 dark:text-foreground">{{ user.name || '' }} {{ user.surname || '' }}</span>
-                                        <small class="text-gray-500 dark:text-muted-foreground">{{ user.email || '' }}</small>
-                                    </div>
-                                    <Button size="sm" variant="outline" :disabled="isLoadingUser === user.id" @click="addUserToProject(user.id)">
-                                        <Loader v-if="isLoadingUser === user.id" class="h-4 w-4 mr-2 animate-spin" />
-                                        <span v-else>Ekle</span>
-                                    </Button>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
             </DialogContent>
         </Dialog>
 

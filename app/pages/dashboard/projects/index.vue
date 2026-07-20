@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Project, IApiResponse } from '@/types'
+import type { ProjectListRow, ProjectListResponse } from '@/types'
 import { createColumnHelper } from '@tanstack/vue-table'
 import { View, CirclePlus } from 'lucide-vue-next'
 import { Input } from '@/components/ui/input'
@@ -12,7 +12,7 @@ let searchTimer: ReturnType<typeof setTimeout> | null = null
 const currentPage = ref(1)
 const search = ref('')
 const debouncedSearch = ref('')
-const columnHelper = createColumnHelper<Project>()
+const columnHelper = createColumnHelper<ProjectListRow>()
 const columns = [
     columnHelper.accessor('title', {
         header: () => h('div', { class: 'p-2 min-w-64' }, 'Proje Başlığı'),
@@ -35,7 +35,7 @@ const columns = [
                     class: 'text-wrap leading-relaxed p-2 text-right max-w-96',
                     style: 'overflow-wrap: break-word; word-break: break-word;'
                 },
-                row.original.projectType?.name || '-'
+                row.original.projectTypeName || '-'
             )
     }),
     columnHelper.accessor('startDate', {
@@ -74,21 +74,35 @@ const columns = [
 ]
 
 const getProjects = async () => {
-    const response = await useRequest<IApiResponse<Project>>('/manager/projects', {
+    // idas-api admin listesi: GET /projects -> { rows, pagination }
+    return await useRequest<ProjectListResponse>('/projects', {
         method: 'GET',
         query: {
             page: currentPage.value,
+            limit: 10,
             search: debouncedSearch.value.length >= 3 ? debouncedSearch.value : undefined,
-            select: 'id,title,projectType,startDate,endDate,year',
-            projectTypeSelect: 'id,name'
+            sortBy: 'createdAt',
+            sortOrder: 'desc'
         }
     })
-
-    return response
 }
 
 const { data: projects } = await useAsyncData('projects', getProjects, {
     watch: [currentPage, debouncedSearch]
+})
+
+// idas-api pagination'ını DataTable'ın beklediği (totalItems/hasPrevPage/hasNextPage) yapıya çevir
+const tablePagination = computed(() => {
+    const pagination = projects.value?.pagination
+    if (!pagination) return undefined
+    return {
+        totalItems: pagination.total,
+        totalPages: pagination.totalPages,
+        currentPage: pagination.page,
+        itemsPerPage: pagination.limit,
+        hasPrevPage: pagination.page > 1,
+        hasNextPage: pagination.page < pagination.totalPages
+    }
 })
 
 watch(search, (value) => {
@@ -125,7 +139,7 @@ watch(search, (value) => {
             </CardHeader>
             <CardContent>
                 <div class="overflow-x-auto">
-                    <DataTable v-model:page="currentPage" v-model:search="search" :data="projects?.rows || []" :columns="columns" :api-pagination="projects?.pagination" class="min-w-[800px] h-full" />
+                    <DataTable v-model:page="currentPage" v-model:search="search" :data="projects?.rows || []" :columns="columns" :api-pagination="tablePagination" class="min-w-[800px] h-full" />
                 </div>
             </CardContent>
         </Card>
