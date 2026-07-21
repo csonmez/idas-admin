@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Patent, IApiResponse } from '@/types'
+import type { PatentListRow, PatentListResponse } from '@/types'
 import { createColumnHelper } from '@tanstack/vue-table'
 import { View,CirclePlus } from 'lucide-vue-next'
 const NuxtLink = resolveComponent('NuxtLink')
@@ -19,7 +19,8 @@ const filterableColumns = ref([
     }
 ])
 
-const columnHelper = createColumnHelper<Patent>()
+const pageSize = 10
+const columnHelper = createColumnHelper<PatentListRow>()
 const columns = [
     columnHelper.accessor('title', {
         header: 'Patent Başlığı',
@@ -49,19 +50,34 @@ const columns = [
 ]
 
 const getPatents = async () => {
-    const response = await useRequest<IApiResponse<Patent>>('/manager/patents', {
+    // idas-api admin listesi: GET /patents/admin -> { data, total }, sayfalama limit/offset
+    return await useRequest<PatentListResponse>('/patents/admin', {
         method: 'GET',
         query: {
-            page: currentPage.value,
-            search: debouncedSearch.value.length >= 3 ? debouncedSearch.value : undefined,
-            select: 'id,title,type,year'
+            limit: pageSize,
+            offset: (currentPage.value - 1) * pageSize,
+            search: debouncedSearch.value.length >= 3 ? debouncedSearch.value : undefined
         }
     })
-    return response
 }
 
 const { data: patents } = await useAsyncData('patents', getPatents, {
     watch: [currentPage, debouncedSearch]
+})
+
+// idas-api {data,total} -> DataTable'ın beklediği pagination yapısına çevir
+const tablePagination = computed(() => {
+    const total = patents.value?.total
+    if (total === undefined || total === null) return undefined
+    const totalPages = Math.ceil(total / pageSize) || 1
+    return {
+        totalItems: total,
+        totalPages,
+        currentPage: currentPage.value,
+        itemsPerPage: pageSize,
+        hasPrevPage: currentPage.value > 1,
+        hasNextPage: currentPage.value < totalPages
+    }
 })
 
 // Arama yapıldığında debounce uygula ve sayfa 1'e dön
@@ -100,7 +116,7 @@ watch(search, (value) => {
           </CardHeader>
           <CardContent>
               <div class="overflow-x-auto">
-                  <DataTable v-model:page="currentPage" v-model:search="search" :data="patents?.rows || []" :columns="columns" :api-pagination="patents?.pagination" :filterable-columns="filterableColumns" class="min-w-[600px] h-full" />
+                  <DataTable v-model:page="currentPage" v-model:search="search" :data="patents?.data || []" :columns="columns" :api-pagination="tablePagination" :filterable-columns="filterableColumns" class="min-w-[600px] h-full" />
               </div>
           </CardContent>
       </Card>

@@ -58,7 +58,8 @@ const calendarMaxDate = computed(() => parseDate(`${currentYear + 1}-12-31`))
 const formatDateForApi = (date: Date | undefined): string | undefined => {
     if (!date) return undefined
     const d = date instanceof Date ? date : new Date(date)
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    // idas-api ISO datetime bekliyor (z.string().datetime()); takvim gününü koru
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}T00:00:00.000Z`
 }
 
 const onSubmit: SubmissionHandler<GenericObject, GenericObject, unknown> = async (values, { resetForm }) => {
@@ -74,8 +75,8 @@ const onSubmit: SubmissionHandler<GenericObject, GenericObject, unknown> = async
         body.hasInternationalCollaboration = values.hasInternationalCollaboration ?? false
         body.hasIndustryCollaboration = values.hasIndustryCollaboration ?? false
 
-        await useRequest<Patent>(`/manager/patents/${patentId}`, {
-            method: 'PATCH',
+        await useRequest<Patent>(`/patents/admin/${patentId}`, {
+            method: 'PUT',
             body
         })
 
@@ -91,11 +92,7 @@ const onSubmit: SubmissionHandler<GenericObject, GenericObject, unknown> = async
 const { data: patent } = await useAsyncData(
     `update-patent-${patentId}`,
     () =>
-        useRequest<Patent>(`/manager/patents/${patentId}`, {
-            query: {
-                select: 'id,title,year,date,type,hasNationalCollaboration,hasInternationalCollaboration,hasIndustryCollaboration'
-            }
-        }),
+        useRequest<Patent>(`/patents/admin/${patentId}`, { method: 'GET' }),
     { server: true }
 )
 

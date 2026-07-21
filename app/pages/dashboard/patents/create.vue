@@ -61,7 +61,8 @@ const calendarMaxDate = computed(() => parseDate(`${currentYear + 1}-12-31`))
 const formatDateForApi = (date: Date | undefined): string | undefined => {
     if (!date) return undefined
     const d = date instanceof Date ? date : new Date(date)
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    // idas-api ISO datetime bekliyor (z.string().datetime()); takvim gününü koru
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}T00:00:00.000Z`
 }
 
 const onSubmit: SubmissionHandler<GenericObject, GenericObject, unknown> = async (values, { resetForm }) => {
@@ -79,7 +80,7 @@ const onSubmit: SubmissionHandler<GenericObject, GenericObject, unknown> = async
             hasIndustryCollaboration: values.hasIndustryCollaboration ?? false
         }
 
-        const patentResponse = await useRequest<Patent>('/manager/patents', {
+        const patentResponse = await useRequest<Patent>('/patents/admin', {
             method: 'POST',
             body
         })

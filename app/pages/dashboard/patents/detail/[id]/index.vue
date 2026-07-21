@@ -1,78 +1,55 @@
 <script setup lang="ts">
-import { Award, Users, CirclePlus, Loader, Trash2, Clock, Globe, Home, Factory, MoreHorizontal, Edit } from 'lucide-vue-next'
+import { Award, Users, Trash2, Clock, Globe, Home, Factory, MoreHorizontal, Edit, FileText } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Input } from '@/components/ui/input'
-import type { Patent, User, UserPatent } from '@/types'
+import type { PatentDetailResponse } from '@/types'
 
 const route = useRoute()
 const patentId = route.params.id as string
 
 const isDeleting = ref(false)
 const showDeleteDialog = ref(false)
-const isOpenUserSearchDialog = ref(false)
 const showRemoveDialog = ref(false)
-const pendingRemoveId = ref<string | null>(null)
-const searchUser = ref('')
-const users = ref<User[]>([])
-const isLoadingUser = ref('')
+const pendingRemoveUserId = ref<string | null>(null)
+
+// idas-api admin detay: GET /patents/admin/:id -> patent + authors[]
+const {
+    data,
+    pending: loading,
+    error,
+    refresh
+} = await useAsyncData(`patent-${patentId}`, async () => {
+    return await useRequest<PatentDetailResponse>(`/patents/admin/${patentId}`, { method: 'GET' })
+})
+
 const patent = computed(() => data.value)
-const researchersList = computed(() => patent.value?.userPatents || [])
+const researchersList = computed(() => patent.value?.authors ?? [])
 
-const searchUsers = async () => {
-    if (searchUser.value.length < 3) return
-    try {
-        const response = await useRequest<{ rows: User[] }>('/manager/users', {
-            method: 'GET',
-            query: { search: searchUser.value, limit: 5 }
-        })
-        if (response && response.rows) users.value = response.rows
-        else if (response && Array.isArray(response)) users.value = response
-        else users.value = []
-    } catch {
-        users.value = []
-    }
-}
+const categoryLabel = (c?: string) => (c === 'UTILITY_MODEL' ? 'Faydalı Model' : c === 'PATENT' ? 'Patent' : '-')
+const statusLabel = (s?: string) => (s === 'REGISTRATION' ? 'Tescil' : s === 'REJECTION' ? 'Ret' : s === 'APPLICATION' ? 'Başvuru' : '-')
 
-const addUserToPatent = async (userId: string) => {
-    try {
-        isLoadingUser.value = userId
-        await useRequest('/manager/user-patents', {
-            method: 'POST',
-            body: { userId, patentId }
-        })
-        isOpenUserSearchDialog.value = false
-        searchUser.value = ''
-        isLoadingUser.value = ''
-        users.value = []
-        await refresh()
-    } catch (err: any) {
-        isLoadingUser.value = ''
-        if (err.data?.code === 'ERRORx007') {
-            $toast({ title: 'Araştırmacı zaten ekli', description: 'Bu kullanıcı patente zaten eklenmiş.', variant: 'destructive' })
-        }
-    }
-}
+// TODO: "Araştırmacı ekle" için kullanıcı arama gerekiyor; idas-api'de henüz kullanıcı
+// arama endpoint'i yok (eski /manager/users kalktı). Endpoint eklenince PUT
+// /patents/admin/:id ({ userIds: [...] }) ile ekleme dialogu geri gelecek.
 
-const getMainAcademicUnit = (user: any) => {
-    if (!user?.userAcademicUnits) return ''
-    const mainUnit = user.userAcademicUnits.find((u: any) => u.affiliationType === 'MAIN')
-    if (!mainUnit?.academicUnit) return ''
-    return `${mainUnit.academicUnit.name} - ${mainUnit.academicUnit.type || 'Birim'}`
-}
-
-const confirmRemoveResearcher = (userPatentId: string) => {
-    pendingRemoveId.value = userPatentId
+const confirmRemoveResearcher = (userId: string) => {
+    pendingRemoveUserId.value = userId
     showRemoveDialog.value = true
 }
 
-const removeResearcher = async (userPatentId: string) => {
+// idas-api'de ayrı user-patent ucu yok; araştırmacı PUT ile senkronlanır:
+// kalan userId listesini gönderiyoruz (patent alanlarına dokunulmuyor).
+const removeResearcher = async (userId: string) => {
+    const remaining = (patent.value?.authors ?? []).filter((a) => a.userId !== userId).map((a) => a.userId)
     try {
-        await useRequest(`/manager/user-patents/${userPatentId}`, { method: 'DELETE' })
+        await useRequest(`/patents/admin/${patentId}`, {
+            method: 'PUT',
+            body: { userIds: remaining }
+        })
         $toast({ title: 'Araştırmacı kaldırıldı', description: 'Araştırmacı patent listesinden kaldırıldı.' })
         await refresh()
     } catch {
@@ -83,7 +60,7 @@ const removeResearcher = async (userPatentId: string) => {
 const deletePatent = async () => {
     try {
         isDeleting.value = true
-        await useRequest(`/manager/patents/${patentId}`, { method: 'DELETE' })
+        await useRequest(`/patents/admin/${patentId}`, { method: 'DELETE' })
         $toast({ title: 'Patent başarıyla silindi', description: `${patent.value?.title} patenti sistemden kaldırıldı.` })
         navigateTo('/dashboard/patents')
     } catch {
@@ -93,27 +70,6 @@ const deletePatent = async () => {
         showDeleteDialog.value = false
     }
 }
-
-const {
-    data,
-    pending: loading,
-    error,
-    refresh
-} = await useAsyncData(`patent-${patentId}`, async () => {
-    return await useRequest<Patent>(`/manager/patents/${patentId}`, {
-        method: 'GET',
-        query: {
-            select: 'id,title,year,date,type,hasNationalCollaboration,hasInternationalCollaboration,hasIndustryCollaboration,createdAt,updatedAt,userPatents,userPatents.deletedAt,userPatents.user,userPatents.user.userAcademicUnits,userPatents.user.userAcademicUnits.academicUnit'
-        }
-    })
-})
-
-let searchTimeout: any = null
-watch(searchUser, () => {
-    if (searchTimeout) clearTimeout(searchTimeout)
-    if (searchUser.value.length >= 3) searchTimeout = setTimeout(() => searchUsers(), 300)
-    else users.value = []
-})
 </script>
 
 <template>
@@ -196,6 +152,16 @@ watch(searchUser, () => {
                                     <span v-else class="text-sm text-muted-foreground">Belirtilmemiş</span>
                                 </div>
                                 <div class="flex items-center space-x-2">
+                                    <FileText class="h-4 w-4 text-muted-foreground" />
+                                    <span class="text-sm font-medium">Kategori:</span>
+                                    <span class="text-sm">{{ categoryLabel(patent?.category) }}</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <Award class="h-4 w-4 text-muted-foreground" />
+                                    <span class="text-sm font-medium">Durum:</span>
+                                    <span class="text-sm">{{ statusLabel(patent?.patentStatus) }}</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
                                     <Clock class="h-4 w-4 text-muted-foreground" />
                                     <span class="text-sm font-medium">Patent Tarihi:</span>
                                     <span class="text-sm">{{ patent?.date ? new Date(patent.date).toLocaleDateString('tr-TR') : 'Bilinmiyor' }}</span>
@@ -254,32 +220,25 @@ watch(searchUser, () => {
             <!-- Araştırmacılar -->
             <Card class="w-full max-w-full">
                 <CardHeader>
-                    <div class="flex items-center justify-between">
-                        <CardTitle class="flex items-center space-x-2">
-                            <Users class="h-5 w-5" />
-                            <span>Araştırmacılar ({{ researchersList.length }})</span>
-                        </CardTitle>
-                        <Button variant="outline" size="sm" @click="isOpenUserSearchDialog = true" class="h-8 w-8 p-0" aria-label="Araştırmacı ekle">
-                            <CirclePlus class="h-4 w-4" />
-                        </Button>
-                    </div>
+                    <CardTitle class="flex items-center space-x-2">
+                        <Users class="h-5 w-5" />
+                        <span>Araştırmacılar ({{ researchersList.length }})</span>
+                    </CardTitle>
+                    <!-- TODO: Araştırmacı ekleme, idas-api'ye kullanıcı arama endpoint'i eklenince geri gelecek -->
                 </CardHeader>
                 <CardContent>
                     <div v-if="researchersList.length === 0" class="text-center py-8 text-muted-foreground">
                         Bu patent için henüz araştırmacı bilgisi bulunmuyor.
                     </div>
                     <div v-else class="space-y-3">
-                        <div v-for="researcher in researchersList" :key="researcher.id" class="flex items-center justify-between p-3 border rounded-lg transition-opacity" :class="researcher.deletedAt ? 'opacity-50 bg-red-50' : ''">
-                            <div class="flex-1 flex items-center gap-2">
-                                <div>
-                                    <button @click="!researcher.deletedAt && navigateTo(`/dashboard/academicians/${researcher.user?.id}`)" :class="!researcher.deletedAt ? 'hover:text-blue-600 cursor-pointer' : 'cursor-default'" class="text-left transition-colors">
-                                        <p class="font-medium" :class="researcher.deletedAt ? 'line-through text-muted-foreground' : ''">{{ formatUserName(researcher?.user || null) }}</p>
-                                    </button>
-                                    <p class="text-sm text-muted-foreground mt-1">{{ getMainAcademicUnit(researcher.user) }}</p>
-                                </div>
-                                <Badge v-if="researcher.deletedAt" variant="destructive" class="text-xs ml-2">Silindi</Badge>
+                        <div v-for="researcher in researchersList" :key="researcher.userId" class="flex items-center justify-between p-3 border rounded-lg transition-opacity">
+                            <div class="flex-1">
+                                <button @click="navigateTo(`/dashboard/academicians/${researcher.userId}`)" class="text-left transition-colors hover:text-blue-600 cursor-pointer">
+                                    <p class="font-medium">{{ researcher.name }} {{ researcher.surname }}</p>
+                                </button>
+                                <p v-if="researcher.title" class="text-sm text-muted-foreground mt-1">{{ researcher.title }}</p>
                             </div>
-                            <Button v-if="!researcher.deletedAt" variant="ghost" size="sm" @click="confirmRemoveResearcher(researcher.id)" class="h-8 w-8 p-0 text-red-600 hover:text-red-800 hover:bg-red-50" aria-label="Araştırmacıyı kaldır">
+                            <Button variant="ghost" size="sm" @click="confirmRemoveResearcher(researcher.userId)" class="h-8 w-8 p-0 text-red-600 hover:text-red-800 hover:bg-red-50" aria-label="Araştırmacıyı kaldır">
                                 <Trash2 class="h-4 w-4" />
                             </Button>
                         </div>
@@ -310,35 +269,6 @@ watch(searchUser, () => {
             </DialogContent>
         </Dialog>
 
-        <!-- Araştırmacı Ekleme Dialog -->
-        <Dialog :open="isOpenUserSearchDialog" @update:open="isOpenUserSearchDialog = false">
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Akademisyen Arama</DialogTitle>
-                    <DialogDescription>Arama yapmak için en az 3 karakter yazınız.</DialogDescription>
-                </DialogHeader>
-                <div class="flex flex-col items-center w-full">
-                    <Input v-model="searchUser" type="text" class="w-full" placeholder="Arama..." />
-                    <div v-if="users?.length" class="mt-4 w-full bg-white p-4 rounded-lg shadow-md">
-                        <div class="max-h-64 overflow-y-auto">
-                            <ul class="divide-y divide-gray-200">
-                                <li v-for="user in users" :key="user.id" class="flex items-center justify-between py-2">
-                                    <div class="flex flex-col">
-                                        <span class="text-gray-700">{{ user.name || '' }} {{ user.surname || '' }}</span>
-                                        <small class="text-gray-500">{{ user.email || '' }}</small>
-                                    </div>
-                                    <Button size="sm" variant="outline" :disabled="isLoadingUser === user.id" @click="addUserToPatent(user.id)">
-                                        <Loader v-if="isLoadingUser === user.id" class="h-4 w-4 mr-2 animate-spin" />
-                                        <span v-else>Ekle</span>
-                                    </Button>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </DialogContent>
-        </Dialog>
-
         <!-- Araştırmacı Kaldırma Onay Dialog -->
         <AlertDialog v-model:open="showRemoveDialog">
             <AlertDialogContent>
@@ -349,10 +279,10 @@ watch(searchUser, () => {
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel @click="pendingRemoveId = null">İptal</AlertDialogCancel>
+                    <AlertDialogCancel @click="pendingRemoveUserId = null">İptal</AlertDialogCancel>
                     <AlertDialogAction
                         class="bg-red-600 hover:bg-red-700 text-white"
-                        @click="pendingRemoveId && removeResearcher(pendingRemoveId); pendingRemoveId = null"
+                        @click="pendingRemoveUserId && removeResearcher(pendingRemoveUserId); pendingRemoveUserId = null"
                     >
                         <Trash2 class="h-4 w-4 mr-2" />
                         Kaldır

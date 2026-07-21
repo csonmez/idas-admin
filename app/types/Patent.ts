@@ -26,3 +26,57 @@ export interface UserPatent {
     updatedAt: Date
     deletedAt?: Date | null
 }
+
+// ---------- Yeni patents API tipleri (idas-api / feature/patent) ----------
+
+export type PatentTypeEnum = 'NATIONAL' | 'INTERNATIONAL'
+export type PatentStatusEnum = 'APPLICATION' | 'REGISTRATION' | 'REJECTION'
+export type InstitutionOwnershipEnum = 'UNIVERSITY' | 'INDIVIDUAL' | 'INSTITUTION'
+export type PatentCategoryEnum = 'PATENT' | 'UTILITY_MODEL'
+
+export interface ExternalInventor {
+    name: string
+    university: string
+}
+
+// GET /patents/admin/:id -> authors[]
+export interface PatentAuthorRow {
+    userId: string
+    name: string
+    surname: string
+    title: string | null
+}
+
+// GET /patents/admin -> data[] (authors olmadan)
+export interface PatentListRow {
+    id: string
+    title: string
+    date: string
+    year: number
+    type: PatentTypeEnum
+    category: PatentCategoryEnum
+    applicationNumber: string | null
+    applicationDate: string | null
+    registrationDate: string | null
+    patentStatus: PatentStatusEnum
+    isCommercialized: boolean
+    institutionOwnership: InstitutionOwnershipEnum
+    source: string | null
+    externalInventors: ExternalInventor[] | null
+    hasInternationalCollaboration: boolean
+    hasIndustryCollaboration: boolean
+    hasNationalCollaboration: boolean
+    createdAt: string
+    updatedAt: string
+    deletedAt: string | null
+}
+
+export interface PatentListResponse {
+    data: PatentListRow[]
+    total: number
+}
+
+// GET /patents/admin/:id -> tek patent (authors dahil)
+export interface PatentDetailResponse extends PatentListRow {
+    authors: PatentAuthorRow[]
+}
