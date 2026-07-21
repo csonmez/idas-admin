@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Prize, IApiResponse } from '@/types'
+import type { AwardRecord, AwardListResponse } from '@/types'
 import { createColumnHelper } from '@tanstack/vue-table'
 import { View, CirclePlus } from 'lucide-vue-next'
 import { h, resolveComponent } from 'vue'
@@ -12,7 +12,7 @@ const search = ref('')
 const debouncedSearch = ref('')
 const filterableColumns = ref([])
 
-const columnHelper = createColumnHelper<Prize>()
+const columnHelper = createColumnHelper<AwardRecord>()
 const columns = [
     columnHelper.accessor('title', {
         header: () => h('div', { class: 'p-2 min-w-64' }, 'Ödül Başlığı'),
@@ -40,19 +40,33 @@ const columns = [
 ]
 
 const getPrizes = async () => {
-    const response = await useRequest<IApiResponse<Prize>>('/manager/prizes', {
+    // idas-api admin listesi: GET /awards -> { rows, pagination }
+    return await useRequest<AwardListResponse>('/awards', {
         method: 'GET',
         query: {
             page: currentPage.value,
-            search: debouncedSearch.value.length >= 3 ? debouncedSearch.value : undefined,
-            select: 'id,title,year'
+            limit: 10,
+            search: debouncedSearch.value.length >= 3 ? debouncedSearch.value : undefined
         }
     })
-    return response
 }
 
 const { data: prizes } = await useAsyncData('prizes', getPrizes, {
     watch: [currentPage, debouncedSearch]
+})
+
+// idas-api pagination'ını DataTable'ın beklediği yapıya çevir
+const tablePagination = computed(() => {
+    const pagination = prizes.value?.pagination
+    if (!pagination) return undefined
+    return {
+        totalItems: pagination.total,
+        totalPages: pagination.totalPages,
+        currentPage: pagination.page,
+        itemsPerPage: pagination.limit,
+        hasPrevPage: pagination.page > 1,
+        hasNextPage: pagination.page < pagination.totalPages
+    }
 })
 
 watch(search, (value) => {
@@ -87,7 +101,7 @@ watch(search, (value) => {
             </CardHeader>
             <CardContent>
                 <div class="overflow-x-auto">
-                    <DataTable v-model:page="currentPage" v-model:search="search" :data="prizes?.rows || []" :columns="columns" :api-pagination="prizes?.pagination" :filterable-columns="filterableColumns" class="min-w-[600px] h-full"/>
+                    <DataTable v-model:page="currentPage" v-model:search="search" :data="prizes?.rows || []" :columns="columns" :api-pagination="tablePagination" :filterable-columns="filterableColumns" class="min-w-[600px] h-full"/>
                 </div>
             </CardContent>
         </Card>

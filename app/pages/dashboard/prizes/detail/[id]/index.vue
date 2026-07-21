@@ -1,87 +1,60 @@
 <script setup lang="ts">
-import { Award, Users, CirclePlus, Loader, Trash2, Clock, MoreHorizontal, Edit } from 'lucide-vue-next'
+import { Award, Users, Trash2, Clock, MoreHorizontal, Edit, Building, FileText } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Input } from '@/components/ui/input'
-import type { Prize, User, UserPrize } from '@/types'
+import type { AwardDetailResponse, UserAwardsResponse } from '@/types'
 
 const route = useRoute()
 const prizeId = route.params.id as string
 
 const isDeleting = ref(false)
 const showDeleteDialog = ref(false)
-const isOpenUserSearchDialog = ref(false)
 const showRemoveDialog = ref(false)
 const pendingRemoveId = ref<string | null>(null)
-const searchUser = ref('')
-const users = ref<User[]>([])
-const isLoadingUser = ref('')
+
+// idas-api admin detay: GET /awards/:id -> { award }
+const {
+    data,
+    pending: loading,
+    error,
+    refresh
+} = await useAsyncData(`prize-${prizeId}`, async () => {
+    const res = await useRequest<AwardDetailResponse>(`/awards/${prizeId}`, { method: 'GET' })
+    return res.award
+})
 
 const prize = computed(() => data.value)
-const locallyDeletedIds = ref<string[]>([])
-const researchersList = computed(() => prize.value?.userPrizes || [])
 
-// Aktif (silinmemiş) araştırmacı varsa yeni eklenemez
-const canAddResearcher = computed(() =>
-    !researchersList.value.some((r: UserPrize) => !r.deletedAt && !locallyDeletedIds.value.includes(r.id))
-)
+// Ödül sahipleri ayrı uçtan: GET /awards/:id/user-awards -> { rows } (sadece userId)
+const { data: recipientsData, refresh: refreshRecipients } = await useAsyncData(`prize-${prizeId}-recipients`, async () => {
+    return await useRequest<UserAwardsResponse>(`/awards/${prizeId}/user-awards`, {
+        method: 'GET',
+        query: { page: 1, limit: 100 }
+    })
+})
 
-const searchUsers = async () => {
-    if (searchUser.value.length < 3) return
-    try {
-        const response = await useRequest<{ rows: User[] }>('/manager/users', {
-            method: 'GET',
-            query: { search: searchUser.value, limit: 5 }
-        })
-        if (response && response.rows) users.value = response.rows
-        else if (response && Array.isArray(response)) users.value = response
-        else users.value = []
-    } catch {
-        users.value = []
-    }
-}
+const researchersList = computed(() => recipientsData.value?.rows ?? [])
 
-const addUserToPrize = async (userId: string) => {
-    try {
-        isLoadingUser.value = userId
-        await useRequest('/manager/user-prizes', {
-            method: 'POST',
-            body: { userId, prizeId }
-        })
-        isOpenUserSearchDialog.value = false
-        searchUser.value = ''
-        isLoadingUser.value = ''
-        users.value = []
-        await refresh()
-    } catch (err: any) {
-        isLoadingUser.value = ''
-        if (err.data?.code === 'ERRORx007') {
-            $toast({ title: 'Araştırmacı zaten ekli', description: 'Bu kullanıcı ödüle zaten eklenmiş.', variant: 'destructive' })
-        }
-    }
-}
+const typeLabel = (t?: string | null) => (t === 'INTERNATIONAL' ? 'Uluslararası' : t === 'NATIONAL' ? 'Ulusal' : null)
 
-const getMainAcademicUnit = (user: any) => {
-    if (!user?.userAcademicUnits) return ''
-    const mainUnit = user.userAcademicUnits.find((u: any) => u.affiliationType === 'MAIN')
-    if (!mainUnit?.academicUnit) return ''
-    return `${mainUnit.academicUnit.name} - ${mainUnit.academicUnit.type || 'Birim'}`
-}
+// TODO: "Araştırmacı ekle" için kullanıcı arama gerekiyor; idas-api'de henüz kullanıcı
+// arama endpoint'i yok (eski /manager/users kalktı). Endpoint eklenince POST
+// /awards/:id/user-awards ({ userId }) ile ekleme dialogu geri gelecek.
 
-const confirmRemoveResearcher = (userPrizeId: string) => {
-    pendingRemoveId.value = userPrizeId
+const confirmRemoveResearcher = (userAwardId: string) => {
+    pendingRemoveId.value = userAwardId
     showRemoveDialog.value = true
 }
 
-const removeResearcher = async (userPrizeId: string) => {
+const removeResearcher = async (userAwardId: string) => {
     try {
-        await useRequest(`/manager/user-prizes/${userPrizeId}`, { method: 'DELETE' })
+        await useRequest(`/awards/${prizeId}/user-awards/${userAwardId}`, { method: 'DELETE' })
         $toast({ title: 'Araştırmacı kaldırıldı', description: 'Araştırmacı ödül listesinden kaldırıldı.' })
-        locallyDeletedIds.value = [...locallyDeletedIds.value, userPrizeId]
+        await refreshRecipients()
     } catch {
         $toast({ title: 'Hata', description: 'Araştırmacı kaldırılırken bir hata oluştu.', variant: 'destructive' })
     }
@@ -90,7 +63,7 @@ const removeResearcher = async (userPrizeId: string) => {
 const deletePrize = async () => {
     try {
         isDeleting.value = true
-        await useRequest(`/manager/prizes/${prizeId}`, { method: 'DELETE' })
+        await useRequest(`/awards/${prizeId}`, { method: 'DELETE' })
         $toast({ title: 'Ödül başarıyla silindi', description: `${prize.value?.title} ödülü sistemden kaldırıldı.` })
         navigateTo('/dashboard/prizes')
     } catch {
@@ -100,27 +73,6 @@ const deletePrize = async () => {
         showDeleteDialog.value = false
     }
 }
-
-const {
-    data,
-    pending: loading,
-    error,
-    refresh
-} = await useAsyncData(`prize-${prizeId}`, async () => {
-    return await useRequest<Prize>(`/manager/prizes/${prizeId}`, {
-        method: 'GET',
-        query: {
-            select: 'id,title,year,date,type,createdAt,updatedAt,userPrizes,userPrizes.deletedAt,userPrizes.user,userPrizes.user.userAcademicUnits,userPrizes.user.userAcademicUnits.academicUnit'
-        }
-    })
-})
-
-let searchTimeout: any = null
-watch(searchUser, () => {
-    if (searchTimeout) clearTimeout(searchTimeout)
-    if (searchUser.value.length >= 3) searchTimeout = setTimeout(() => searchUsers(), 300)
-    else users.value = []
-})
 </script>
 
 <template>
@@ -152,12 +104,8 @@ watch(searchUser, () => {
                             <div class="flex items-center gap-2">
                                 <CardTitle class="text-xl">{{ prize?.title }}</CardTitle>
                                 <Badge v-if="prize?.year" variant="secondary" class="text-xs">{{ prize.year }}</Badge>
-                                <Badge
-                                    v-if="prize?.type"
-                                    variant="outline"
-                                    class="text-xs bg-blue-50 text-blue-700 border-blue-200"
-                                >
-                                    {{ prize.type }}
+                                <Badge v-if="typeLabel(prize?.type)" variant="outline" class="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                                    {{ typeLabel(prize?.type) }}
                                 </Badge>
                             </div>
                             <CardDescription>Ödül ID: {{ prize.id }}</CardDescription>
@@ -190,19 +138,25 @@ watch(searchUser, () => {
                                 <div class="flex items-center space-x-2">
                                     <Award class="h-4 w-4 text-muted-foreground" />
                                     <span class="text-sm font-medium">Ödül Türü:</span>
-                                    <Badge
-                                        v-if="prize?.type"
-                                        variant="outline"
-                                        class="bg-blue-50 text-blue-700 border-blue-200"
-                                    >
-                                        {{ prize.type }}
+                                    <Badge v-if="typeLabel(prize?.type)" variant="outline" class="bg-blue-50 text-blue-700 border-blue-200">
+                                        {{ typeLabel(prize?.type) }}
                                     </Badge>
                                     <span v-else class="text-sm text-muted-foreground">Belirtilmemiş</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <Building class="h-4 w-4 text-muted-foreground" />
+                                    <span class="text-sm font-medium">Kurum:</span>
+                                    <span class="text-sm">{{ prize?.organization || 'Belirtilmemiş' }}</span>
                                 </div>
                                 <div class="flex items-center space-x-2">
                                     <Clock class="h-4 w-4 text-muted-foreground" />
                                     <span class="text-sm font-medium">Ödül Tarihi:</span>
                                     <span class="text-sm">{{ prize?.date ? new Date(prize.date).toLocaleDateString('tr-TR') : 'Bilinmiyor' }}</span>
+                                </div>
+                                <div v-if="prize?.description" class="flex items-start space-x-2">
+                                    <FileText class="h-4 w-4 text-muted-foreground mt-0.5" />
+                                    <span class="text-sm font-medium">Açıklama:</span>
+                                    <span class="text-sm">{{ prize.description }}</span>
                                 </div>
                             </div>
                         </div>
@@ -227,35 +181,25 @@ watch(searchUser, () => {
                 </CardContent>
             </Card>
 
-            <!-- Araştırmacı -->
+            <!-- Araştırmacı / Ödül Sahipleri -->
             <Card class="w-full max-w-full">
                 <CardHeader>
-                    <div class="flex items-center justify-between">
-                        <CardTitle class="flex items-center space-x-2">
-                            <Users class="h-5 w-5" />
-                            <span>Araştırmacı</span>
-                        </CardTitle>
-                        <Button v-if="canAddResearcher" variant="outline" size="sm" @click="isOpenUserSearchDialog = true" class="h-8 w-8 p-0" aria-label="Araştırmacı ekle">
-                            <CirclePlus class="h-4 w-4" />
-                        </Button>
-                    </div>
+                    <CardTitle class="flex items-center space-x-2">
+                        <Users class="h-5 w-5" />
+                        <span>Araştırmacı ({{ researchersList.length }})</span>
+                    </CardTitle>
+                    <!-- TODO: Araştırmacı ekleme, idas-api'ye kullanıcı arama endpoint'i eklenince geri gelecek -->
                 </CardHeader>
                 <CardContent>
                     <div v-if="researchersList.length === 0" class="text-center py-8 text-muted-foreground">
                         Bu ödül için henüz araştırmacı bilgisi bulunmuyor.
                     </div>
                     <div v-else class="space-y-3">
-                        <div v-for="researcher in researchersList" :key="researcher.id" class="flex items-center justify-between p-3 border rounded-lg transition-opacity" :class="(researcher.deletedAt || locallyDeletedIds.includes(researcher.id)) ? 'opacity-50 bg-red-50' : ''">
-                            <div class="flex-1 flex items-center gap-2">
-                                <div>
-                                    <button @click="!(researcher.deletedAt || locallyDeletedIds.includes(researcher.id)) && navigateTo(`/dashboard/academicians/${researcher.user?.id}`)" :class="!(researcher.deletedAt || locallyDeletedIds.includes(researcher.id)) ? 'hover:text-blue-600 cursor-pointer' : 'cursor-default'" class="text-left transition-colors">
-                                        <p class="font-medium" :class="(researcher.deletedAt || locallyDeletedIds.includes(researcher.id)) ? 'line-through text-muted-foreground' : ''">{{ formatUserName(researcher?.user || null) }}</p>
-                                    </button>
-                                    <p class="text-sm text-muted-foreground mt-1">{{ getMainAcademicUnit(researcher.user) }}</p>
-                                </div>
-                                <Badge v-if="researcher.deletedAt || locallyDeletedIds.includes(researcher.id)" variant="destructive" class="text-xs ml-2">Silindi</Badge>
-                            </div>
-                            <Button v-if="!(researcher.deletedAt || locallyDeletedIds.includes(researcher.id))" variant="ghost" size="sm" @click="confirmRemoveResearcher(researcher.id)" class="h-8 w-8 p-0 text-red-600 hover:text-red-800 hover:bg-red-50" aria-label="Araştırmacıyı kaldır">
+                        <div v-for="researcher in researchersList" :key="researcher.id" class="flex items-center justify-between p-3 border rounded-lg">
+                            <button @click="navigateTo(`/dashboard/academicians/${researcher.userId}`)" class="text-left transition-colors hover:text-blue-600 cursor-pointer">
+                                <p class="font-medium">Akademisyeni Görüntüle</p>
+                            </button>
+                            <Button variant="ghost" size="sm" @click="confirmRemoveResearcher(researcher.id)" class="h-8 w-8 p-0 text-red-600 hover:text-red-800 hover:bg-red-50" aria-label="Araştırmacıyı kaldır">
                                 <Trash2 class="h-4 w-4" />
                             </Button>
                         </div>
@@ -283,35 +227,6 @@ watch(searchUser, () => {
                         {{ isDeleting ? 'Siliniyor...' : 'Ödülü Sil' }}
                     </Button>
                 </DialogFooter>
-            </DialogContent>
-        </Dialog>
-
-        <!-- Araştırmacı Ekleme Dialog -->
-        <Dialog :open="isOpenUserSearchDialog" @update:open="isOpenUserSearchDialog = false">
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Akademisyen Arama</DialogTitle>
-                    <DialogDescription>Arama yapmak için en az 3 karakter yazınız.</DialogDescription>
-                </DialogHeader>
-                <div class="flex flex-col items-center w-full">
-                    <Input v-model="searchUser" type="text" class="w-full" placeholder="Arama..." />
-                    <div v-if="users?.length" class="mt-4 w-full bg-white p-4 rounded-lg shadow-md">
-                        <div class="max-h-64 overflow-y-auto">
-                            <ul class="divide-y divide-gray-200">
-                                <li v-for="user in users" :key="user.id" class="flex items-center justify-between py-2">
-                                    <div class="flex flex-col">
-                                        <span class="text-gray-700">{{ user.name || '' }} {{ user.surname || '' }}</span>
-                                        <small class="text-gray-500">{{ user.email || '' }}</small>
-                                    </div>
-                                    <Button size="sm" variant="outline" :disabled="isLoadingUser === user.id" @click="addUserToPrize(user.id)">
-                                        <Loader v-if="isLoadingUser === user.id" class="h-4 w-4 mr-2 animate-spin" />
-                                        <span v-else>Ekle</span>
-                                    </Button>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
             </DialogContent>
         </Dialog>
 
@@ -349,5 +264,3 @@ watch(searchUser, () => {
         </Card>
     </div>
 </template>
-
-

@@ -2,7 +2,7 @@
 import { Loader, CalendarIcon } from 'lucide-vue-next'
 import { toTypedSchema } from '@vee-validate/zod'
 import type { GenericObject, SubmissionHandler } from 'vee-validate'
-import type { Prize } from '@/types'
+import type { AwardDetailResponse } from '@/types'
 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup } from '@/components/ui/select'
@@ -29,12 +29,10 @@ for (let year = 2000; year <= currentYear; year++) {
     years.value.unshift(year)
 }
 
-const { data: prize } = await useAsyncData(`prize-update-${prizeId}`, () =>
-    useRequest<Prize>(`/manager/prizes/${prizeId}`, {
-        method: 'GET',
-        query: { select: 'id,title,type,date,year' }
-    })
-)
+const { data: prize } = await useAsyncData(`prize-update-${prizeId}`, async () => {
+    const res = await useRequest<AwardDetailResponse>(`/awards/${prizeId}`, { method: 'GET' })
+    return res.award
+})
 
 const initialValues = computed(() => ({
     title: prize.value?.title ?? '',
@@ -49,10 +47,11 @@ const onSubmit: SubmissionHandler<GenericObject, GenericObject, unknown> = async
         const body: Record<string, any> = {}
         if (values.title) body.title = values.title
         if (values.type) body.type = values.type
-        if (values.date) body.date = new Date(values.date).toISOString()
+        // idas-api tarihi YYYY-MM-DD bekliyor (takvim zaten bu formatı veriyor)
+        if (values.date) body.date = values.date
         if (values.year) body.year = Number(values.year)
 
-        await useRequest(`/manager/prizes/${prizeId}`, {
+        await useRequest(`/awards/${prizeId}`, {
             method: 'PATCH',
             body
         })
@@ -88,10 +87,20 @@ const onSubmit: SubmissionHandler<GenericObject, GenericObject, unknown> = async
 
                     <FormField v-slot="{ componentField }" class="grid gap-2" name="type">
                         <FormItem>
-                            <FormLabel>Ödül Türü <span class="text-muted-foreground text-xs"></span></FormLabel>
-                            <FormControl>
-                                <Input type="text" placeholder="Ödül türünü yazınız" v-bind="componentField" />
-                            </FormControl>
+                            <FormLabel>Ödül Türü</FormLabel>
+                            <Select v-bind="componentField" class="w-full">
+                                <FormControl>
+                                    <SelectTrigger class="w-full">
+                                        <SelectValue placeholder="Ödül türü seçiniz..." />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    <SelectGroup>
+                                        <SelectItem value="NATIONAL">Ulusal</SelectItem>
+                                        <SelectItem value="INTERNATIONAL">Uluslararası</SelectItem>
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
                             <FormMessage />
                         </FormItem>
                     </FormField>
