@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { Loader, ChevronsUpDownIcon, CheckIcon, SearchIcon } from 'lucide-vue-next'
 import * as z from 'zod'
 import { toTypedSchema } from '@vee-validate/zod'
@@ -18,7 +18,9 @@ const zodSchema = z.object({
     year: z.number({ required_error: 'Lütfen makalenin yayınlandığı yayın yılını seçiniz.' }),
     hasNationalCollaboration: z.boolean().optional().default(false),
     hasInternationalCollaboration: z.boolean().optional().default(false),
-    hasIndustryCollaboration: z.boolean().optional().default(false)
+    hasIndustryCollaboration: z.boolean().optional().default(false),
+    isOpenAccess: z.boolean().optional().default(false),
+    isEarlyAccess: z.boolean().optional().default(false)
 })
 const formSchema = toTypedSchema(zodSchema)
 
@@ -112,6 +114,8 @@ const onSubmit: SubmissionHandler<GenericObject, GenericObject, unknown> = async
                 hasNationalCollaboration: values.hasNationalCollaboration,
                 hasInternationalCollaboration: values.hasInternationalCollaboration,
                 hasIndustryCollaboration: values.hasIndustryCollaboration,
+                isOpenAccess: values.isOpenAccess,
+                isEarlyAccess: values.isEarlyAccess,
                 externalIds: values.wosId ? [{ source: 'WOS', externalId: values.wosId }] : []
             }
         })
@@ -293,6 +297,22 @@ watch(journalPopoverOpen, (isOpen) => {
                                 <Checkbox :model-value="value" @update:model-value="handleChange" />
                             </FormControl>
                             <FormLabel class="font-normal"> Sanayi iş birliği ile yayınlanmış makale </FormLabel>
+                        </FormItem>
+                    </FormField>
+                    <FormField v-slot="{ value, handleChange }" type="checkbox" :value="true" :unchecked-value="false" name="isOpenAccess">
+                        <FormItem class="flex flex-row items-center space-x-3 space-y-0">
+                            <FormControl>
+                                <Checkbox :model-value="value" @update:model-value="handleChange" />
+                            </FormControl>
+                            <FormLabel class="font-normal"> Açık erişim </FormLabel>
+                        </FormItem>
+                    </FormField>
+                    <FormField v-slot="{ value, handleChange }" type="checkbox" :value="true" :unchecked-value="false" name="isEarlyAccess">
+                        <FormItem class="flex flex-row items-center space-x-3 space-y-0">
+                            <FormControl>
+                                <Checkbox :model-value="value" @update:model-value="handleChange" />
+                            </FormControl>
+                            <FormLabel class="font-normal"> Early Access </FormLabel>
                         </FormItem>
                     </FormField>
                     <Button type="submit" class="w-full" :disabled="isLoading">

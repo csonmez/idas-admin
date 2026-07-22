@@ -34,7 +34,7 @@ const onSubmit: SubmissionHandler<GenericObject, GenericObject, unknown> = async
         if (values.type) body.type = values.type
         // idas-api tarihi YYYY-MM-DD bekliyor (takvim zaten bu formatı veriyor)
         if (values.date) body.date = values.date
-        if (values.year) body.year = Number(values.year)
+        // NOT: year gönderilmiyor — backend date'ten türetiyor, şema strict (fazladan alanı reddeder)
 
         const prizeResponse = await useRequest<{ award: { id: string } }>('/awards', {
             method: 'POST',

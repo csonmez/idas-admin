@@ -128,3 +128,26 @@ export interface ArticleDetailResponse {
     externalIds: ArticleExternalId[]
     keywords: ArticleKeyword[]
 }
+
+// GET /articles/:id/authors -> { rows, pagination } (user tarafıyla aynı zengin yazar verisi)
+export interface ArticleAuthorRow {
+    id: string
+    isInternal: boolean
+    userId: string | null
+    userName: string | null
+    userSurname: string | null
+    userTitle: string | null
+    fullName: string
+    authorOrder: number
+    isCorrespondingAuthor: boolean | null
+    facultyName: string | null
+    departmentName: string | null
+    disciplineName: string | null
+    institutionName: string | null
+    country: string | null
+}
+
+export interface ArticleAuthorsResponse {
+    rows: ArticleAuthorRow[]
+    pagination: ArticlePagination
+}

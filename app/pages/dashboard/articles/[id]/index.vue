@@ -1,25 +1,14 @@
 <script setup lang="ts">
-import { BookOpen, Award, Users, Trash2, Clock, Globe, Home, Factory, MoreHorizontal, Edit } from 'lucide-vue-next'
+import { Award, BookOpen, Building2, ExternalLink, Factory, Flag, Globe, LockOpen, Tag, Users, Zap, MoreHorizontal, Edit, Trash2 } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Separator } from '@/components/ui/separator'
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import type { ArticleDetailResponse } from '@/types'
+import type { ArticleAuthorRow, ArticleAuthorsResponse, ArticleDetailResponse } from '@/types'
 import { ref, computed } from 'vue'
-
-// idas-api user-assignments cevabı: UserArticleRow (kayıt + kullanıcı ad/soyad/e-posta)
-interface UserAssignment {
-    id: string
-    userId: string
-    articleId: string
-    verifiedAt: string | null
-    deletedAt: string | null
-    userName: string
-    userSurname: string
-    userEmail: string
-}
 
 const route = useRoute()
 const articleId = route.params.id as string
@@ -39,60 +28,123 @@ const {
     return await useRequest<ArticleDetailResponse>(`/articles/${articleId}`, { method: 'GET' })
 })
 
-// Makaleye atanmış kullanıcılar: GET /articles/:id/user-assignments -> { assignments }
-const { data: assignmentsData, refresh: refreshAssignments } = await useAsyncData(`article-${articleId}-assignments`, async () => {
-    return await useRequest<{ assignments: UserAssignment[] }>(`/articles/${articleId}/user-assignments`, { method: 'GET' })
+// Yazarlar: GET /articles/:id/authors -> { rows, pagination } (kurum içi/dışı, sıra, birim)
+const { data: authorsData, refresh: refreshAuthors } = await useAsyncData(`article-${articleId}-authors`, async () => {
+    return await useRequest<ArticleAuthorsResponse>(`/articles/${articleId}/authors`, { method: 'GET', query: { limit: 50 } })
 })
 
 const article = computed(() => data.value?.article)
-const authorsList = computed(() => assignmentsData.value?.assignments ?? [])
-const wosId = computed(() => data.value?.externalIds?.find((e) => e.source === 'WOS')?.externalId ?? null)
+const keywords = computed(() => data.value?.keywords ?? [])
+const externalIds = computed(() => data.value?.externalIds ?? [])
+const authors = computed(() => authorsData.value?.rows ?? [])
+const internalAuthors = computed(() => authors.value.filter((a) => a.isInternal))
+const externalAuthors = computed(() => authors.value.filter((a) => !a.isInternal))
 
-// TODO: "Yazar ekle" için kullanıcı arama gerekiyor; idas-api'de henüz kullanıcı arama
-// endpoint'i yok (eski /manager/users kalktı). Endpoint eklenince POST
-// /articles/:id/user-assignments ({ userId }) ile buraya ekleme dialogu geri gelecek.
+const authorDisplayName = (author: ArticleAuthorRow) => {
+    if (author.isInternal && author.userName) {
+        return `${author.userName} ${author.userSurname ?? ''}`.trim()
+    }
+    return author.fullName
+}
 
-const confirmRemoveAuthor = (userArticleId: string) => {
-    pendingRemoveId.value = userArticleId
+const authorAffiliation = (author: ArticleAuthorRow) => {
+    if (author.isInternal) {
+        const parts = [author.facultyName, author.departmentName, author.disciplineName].filter(Boolean)
+        if (parts.length) return parts.join(' / ')
+    }
+    return [author.institutionName, author.country].filter(Boolean).join(', ')
+}
+
+const externalIdUrl = (source: string, externalId: string) => {
+    if (source === 'WOS') return `https://www.webofscience.com/wos/woscc/full-record/${externalId}`
+    // Scopus'ta iki id biçimi var (2-s2.0-XXX ve düz sayı) — ikisi de aynı linkin sonuna eklenir
+    if (source === 'SCOPUS') return `https://www.scopus.com/pages/publications/${externalId.replace(/^2-s2\.0-/, '')}`
+    return null
+}
+
+const externalSourceLabel = (source: string) => {
+    if (source === 'WOS') return 'Web of Science'
+    if (source === 'SCOPUS') return 'Scopus'
+    return source
+}
+
+const monthNames = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık']
+
+const publicationLabel = computed(() => {
+    if (!article.value) return ''
+    const { publicationMonth, publicationYear } = article.value
+    return publicationMonth ? `${monthNames[publicationMonth - 1]} ${publicationYear}` : String(publicationYear)
+})
+
+const earlyAccessLabel = computed(() => {
+    if (!article.value?.isEarlyAccess) return null
+    const { earlyAccessMonth, earlyAccessYear } = article.value
+    if (!earlyAccessYear) return 'Early Access'
+    return earlyAccessMonth ? `Early Access — ${monthNames[earlyAccessMonth - 1]} ${earlyAccessYear}` : `Early Access — ${earlyAccessYear}`
+})
+
+const journalRef = computed(() => {
+    if (!article.value) return ''
+    const parts: string[] = []
+    if (article.value.volume) parts.push(`Cilt ${article.value.volume}`)
+    if (article.value.issue) parts.push(`Sayı ${article.value.issue}`)
+    if (article.value.pageRange) parts.push(`s. ${article.value.pageRange}`)
+    return parts.join(', ')
+})
+
+const qValueClass = (qValue: string | null) => {
+    switch (qValue) {
+        case 'Q1':
+            return 'bg-emerald-100 text-emerald-800 border-emerald-200'
+        case 'Q2':
+            return 'bg-sky-100 text-sky-800 border-sky-200'
+        case 'Q3':
+            return 'bg-amber-100 text-amber-800 border-amber-200'
+        case 'Q4':
+            return 'bg-red-100 text-red-800 border-red-200'
+        default:
+            return 'bg-muted text-muted-foreground border-transparent'
+    }
+}
+
+const formatNumber = (value: string | null | undefined, digits = 2) => {
+    if (value == null || value === '') return '—'
+    const num = Number(value)
+    return Number.isNaN(num) ? value : num.toLocaleString('tr-TR', { maximumFractionDigits: digits })
+}
+
+const collaborations = computed(() => {
+    if (!article.value) return []
+    return [
+        { label: 'Ulusal İş Birliği', active: article.value.hasNationalCollaboration, icon: Flag },
+        { label: 'Uluslararası İş Birliği', active: article.value.hasInternationalCollaboration, icon: Globe },
+        { label: 'Sanayi İş Birliği', active: article.value.hasIndustryCollaboration, icon: Factory }
+    ].filter((item) => item.active)
+})
+
+const confirmRemoveAuthor = (authorRowId: string) => {
+    pendingRemoveId.value = authorRowId
     showRemoveDialog.value = true
 }
 
-const removeAuthor = async (assignmentId: string) => {
+const removeAuthor = async (authorRowId: string) => {
     try {
-        await useRequest(`/articles/${articleId}/user-assignments/${assignmentId}`, {
-            method: 'DELETE'
-        })
-        $toast({
-            title: 'Yazar kaldırıldı',
-            description: 'Yazar makale yazarları listesinden kaldırıldı.'
-        })
-        await refreshAssignments()
-    } catch (error: any) {
-        $toast({
-            title: 'Hata',
-            description: 'Yazar kaldırılırken bir hata oluştu. Lütfen tekrar deneyiniz.',
-            variant: 'destructive'
-        })
+        await useRequest(`/articles/${articleId}/authors/${authorRowId}`, { method: 'DELETE' })
+        $toast({ title: 'Yazar kaldırıldı', description: 'Yazar makale yazarları listesinden kaldırıldı.' })
+        await refreshAuthors()
+    } catch {
+        $toast({ title: 'Hata', description: 'Yazar kaldırılırken bir hata oluştu. Lütfen tekrar deneyiniz.', variant: 'destructive' })
     }
 }
 
 const deleteArticle = async () => {
     try {
         isDeleting.value = true
-        await useRequest(`/articles/${articleId}`, {
-            method: 'DELETE'
-        })
-        $toast({
-            title: 'Makale başarıyla silindi',
-            description: `${article.value?.title} makalesi sistemden kaldırıldı.`
-        })
+        await useRequest(`/articles/${articleId}`, { method: 'DELETE' })
+        $toast({ title: 'Makale başarıyla silindi', description: `${article.value?.title} makalesi sistemden kaldırıldı.` })
         navigateTo('/dashboard/articles')
-    } catch (error: any) {
-        $toast({
-            title: 'Hata',
-            description: 'Makale silinirken bir hata oluştu. Lütfen tekrar deneyiniz.',
-            variant: 'destructive'
-        })
+    } catch {
+        $toast({ title: 'Hata', description: 'Makale silinirken bir hata oluştu. Lütfen tekrar deneyiniz.', variant: 'destructive' })
     } finally {
         isDeleting.value = false
         showDeleteDialog.value = false
@@ -101,17 +153,15 @@ const deleteArticle = async () => {
 </script>
 
 <template>
-    <div class="flex flex-1 flex-col gap-6 p-6 pt-0 h-full w-full max-w-full overflow-y-auto">
-        <!-- Loading State -->
-        <div v-if="loading" class="space-y-4 mb-6">
-            <div class="animate-pulse">
-                <div class="h-10 bg-gray-200 rounded w-3/4 mx-auto mb-4"></div>
-                <div class="h-4 bg-gray-200 rounded w-48 mx-auto"></div>
-            </div>
+    <div class="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
+        <!-- Yükleniyor -->
+        <div v-if="loading" class="animate-pulse space-y-4">
+            <div class="h-10 bg-gray-200 rounded w-3/4"></div>
+            <div class="h-4 bg-gray-200 rounded w-48"></div>
         </div>
 
-        <!-- Error State -->
-        <div v-else-if="error" class="text-center py-8 space-y-4 mb-6">
+        <!-- Hata -->
+        <div v-else-if="error" class="text-center py-8 space-y-4">
             <div class="text-red-600 dark:text-red-400">
                 <p class="font-medium">Makale bilgileri yüklenemedi</p>
                 <p class="text-sm mt-1">{{ error?.message || 'Bilinmeyen bir hata oluştu' }}</p>
@@ -119,34 +169,68 @@ const deleteArticle = async () => {
             <Button variant="outline" size="sm" @click="refresh()">Tekrar Dene</Button>
         </div>
 
-        <!-- Makale içeriği -->
-        <div v-if="article" class="space-y-6">
-            <!-- Ana Bilgiler -->
-            <Card class="w-full max-w-full">
+        <template v-else-if="article">
+            <!-- Başlık kartı -->
+            <Card>
                 <CardHeader>
-                    <div class="flex items-start justify-between">
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <CardTitle class="text-xl">{{ article?.title }}</CardTitle>
-                                <Badge v-if="article?.publicationYear" variant="secondary" class="text-xs">
-                                    {{ article.publicationYear }}
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="flex flex-col gap-3">
+                            <CardTitle class="flex flex-wrap items-center gap-2.5 text-xl leading-snug">
+                                <span>{{ article.title }}</span>
+                                <Badge variant="secondary" class="text-sm">{{ publicationLabel }}</Badge>
+                            </CardTitle>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <Badge v-if="article.isTopTenPercent" variant="outline" class="border-violet-200 bg-violet-50 text-violet-700">
+                                    <Award class="h-3 w-3 mr-1" />
+                                    İlk %10'luk Dilim
+                                </Badge>
+                                <Badge v-if="article.isOpenAccess" variant="outline" class="border-emerald-200 bg-emerald-50 text-emerald-700">
+                                    <LockOpen class="h-3 w-3 mr-1" />
+                                    Açık Erişim
+                                </Badge>
+                                <Badge v-if="earlyAccessLabel" variant="outline" class="border-amber-200 bg-amber-50 text-amber-700">
+                                    <Zap class="h-3 w-3 mr-1" />
+                                    {{ earlyAccessLabel }}
+                                </Badge>
+                                <Badge v-for="collab in collaborations" :key="collab.label" variant="outline" class="border-blue-200 bg-blue-50 text-blue-700">
+                                    <component :is="collab.icon" class="h-3 w-3 mr-1" />
+                                    {{ collab.label }}
                                 </Badge>
                             </div>
-                            <CardDescription>
-                                <a
-                                    v-if="wosId"
-                                    :href="`https://www.webofscience.com/wos/woscc/full-record/${wosId}`"
-                                    target="_blank"
-                                    class="text-blue-600 hover:text-blue-800 hover:underline"
-                                >
-                                    WoS ID: {{ wosId }}
-                                </a>
-                                <span v-else class="text-muted-foreground">WoS ID: Mevcut değil</span>
+                            <CardDescription v-if="journalRef" class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                <span class="text-muted-foreground">{{ journalRef }}</span>
                             </CardDescription>
+                            <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
+                                <a
+                                    v-if="article.doi"
+                                    :href="`https://doi.org/${article.doi}`"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="inline-flex w-fit items-center gap-1 text-sm text-muted-foreground hover:text-foreground hover:underline"
+                                >
+                                    <ExternalLink class="h-3.5 w-3.5" />
+                                    DOI: {{ article.doi }}
+                                </a>
+                                <template v-for="externalId in externalIds" :key="externalId.id">
+                                    <a
+                                        v-if="externalIdUrl(externalId.source, externalId.externalId)"
+                                        :href="externalIdUrl(externalId.source, externalId.externalId)!"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="inline-flex w-fit items-center gap-1 text-sm text-muted-foreground hover:text-foreground hover:underline"
+                                    >
+                                        <ExternalLink class="h-3.5 w-3.5" />
+                                        {{ externalSourceLabel(externalId.source) }}
+                                    </a>
+                                    <span v-else class="inline-flex items-center gap-1 text-sm text-muted-foreground">
+                                        {{ externalId.source }}: {{ externalId.externalId }}
+                                    </span>
+                                </template>
+                            </div>
                         </div>
                         <DropdownMenu>
                             <DropdownMenuTrigger as-child>
-                                <Button variant="ghost" size="sm" class="h-8 w-8 p-0" aria-label="Makale işlemleri menüsü">
+                                <Button variant="ghost" size="sm" class="h-8 w-8 p-0 shrink-0" aria-label="Makale işlemleri menüsü">
                                     <MoreHorizontal class="h-4 w-4" />
                                 </Button>
                             </DropdownMenuTrigger>
@@ -163,112 +247,145 @@ const deleteArticle = async () => {
                         </DropdownMenu>
                     </div>
                 </CardHeader>
-                <CardContent>
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <!-- Dergi Bilgileri -->
-                        <div class="space-y-3">
-                            <h4 class="font-medium text-sm text-muted-foreground">Dergi Bilgileri</h4>
-                            <div class="space-y-2">
-                                <div class="flex items-center space-x-2">
-                                    <BookOpen class="h-4 w-4 text-muted-foreground" />
-                                    <span class="text-sm font-medium">Dergi:</span>
-                                    <span class="text-sm">{{ article?.journalName || 'Bilinmiyor' }}</span>
-                                </div>
-                                <div class="flex items-center space-x-2">
-                                    <Award class="h-4 w-4 text-muted-foreground" />
-                                    <span class="text-sm font-medium">Q Değeri:</span>
-                                    <Badge variant="outline" class="bg-emerald-50 text-emerald-700 border-emerald-200">
-                                        {{ article?.qValue || '-' }}
-                                    </Badge>
-                                </div>
-                                <div class="flex items-center space-x-2">
-                                    <Award class="h-4 w-4 text-muted-foreground" />
-                                    <span class="text-sm font-medium">İlk %10:</span>
-                                    <Badge :variant="article?.isTopTenPercent ? 'default' : 'secondary'" :class="article?.isTopTenPercent ? 'bg-purple-50 text-purple-700 border-purple-200' : ''">
-                                        {{ article?.isTopTenPercent ? 'Evet' : 'Hayır' }}
-                                    </Badge>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- İşbirliği Bilgileri -->
-                        <div class="space-y-3">
-                            <h4 class="font-medium text-sm text-muted-foreground">İşbirliği Bilgileri</h4>
-                            <div class="space-y-2">
-                                <div class="flex items-center space-x-2">
-                                    <Home class="h-4 w-4 text-muted-foreground" />
-                                    <span class="text-sm font-medium">Ulusal İşbirliği:</span>
-                                    <Badge :variant="article?.hasNationalCollaboration ? 'default' : 'secondary'">
-                                        {{ article?.hasNationalCollaboration ? 'Var' : 'Yok' }}
-                                    </Badge>
-                                </div>
-                                <div class="flex items-center space-x-2">
-                                    <Globe class="h-4 w-4 text-muted-foreground" />
-                                    <span class="text-sm font-medium">Uluslararası İşbirliği:</span>
-                                    <Badge :variant="article?.hasInternationalCollaboration ? 'default' : 'secondary'">
-                                        {{ article?.hasInternationalCollaboration ? 'Var' : 'Yok' }}
-                                    </Badge>
-                                </div>
-                                <div class="flex items-center space-x-2">
-                                    <Factory class="h-4 w-4 text-muted-foreground" />
-                                    <span class="text-sm font-medium">Endüstri İşbirliği:</span>
-                                    <Badge :variant="article?.hasIndustryCollaboration ? 'default' : 'secondary'">
-                                        {{ article?.hasIndustryCollaboration ? 'Var' : 'Yok' }}
-                                    </Badge>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Tarih Bilgileri -->
-                        <div class="space-y-3">
-                            <h4 class="font-medium text-sm text-muted-foreground">Tarih Bilgileri</h4>
-                            <div class="space-y-2">
-                                <div class="flex items-center space-x-2">
-                                    <Clock class="h-4 w-4 text-muted-foreground" />
-                                    <span class="text-sm font-medium">Eklenme Tarihi:</span>
-                                    <span class="text-sm">{{ article?.createdAt ? new Date(article.createdAt).toLocaleDateString('tr-TR') : 'Bilinmiyor' }}</span>
-                                </div>
-                                <div class="flex items-center space-x-2">
-                                    <Clock class="h-4 w-4 text-muted-foreground" />
-                                    <span class="text-sm font-medium">Son Güncelleme:</span>
-                                    <span class="text-sm">{{ article?.updatedAt ? new Date(article.updatedAt).toLocaleDateString('tr-TR') : 'Bilinmiyor' }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </CardContent>
             </Card>
 
-            <!-- Atanmış Yazarlar (kurum içi kullanıcılar) -->
-            <Card class="w-full max-w-full">
+            <div class="grid gap-4 md:grid-cols-3 md:items-start lg:gap-6">
+                <!-- Yazarlar -->
+                <Card class="md:col-span-2">
+                    <CardHeader>
+                        <CardTitle class="flex flex-wrap items-center justify-between gap-2">
+                            <span class="flex items-center gap-2">
+                                <Users class="h-5 w-5 text-muted-foreground" />
+                                Yazar Bilgileri
+                            </span>
+                            <Dialog v-if="externalAuthors.length">
+                                <DialogTrigger as-child>
+                                    <Button variant="outline" size="sm">Kurum Dışı Yazarlar ({{ externalAuthors.length }})</Button>
+                                </DialogTrigger>
+                                <DialogContent class="max-w-lg">
+                                    <DialogHeader>
+                                        <DialogTitle>Kurum Dışı Yazarlar</DialogTitle>
+                                    </DialogHeader>
+                                    <div class="max-h-80 overflow-y-auto pr-2">
+                                        <ul class="divide-y">
+                                            <li v-for="author in externalAuthors" :key="author.id" class="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0">
+                                                <div class="flex flex-col gap-1">
+                                                    <span class="flex flex-wrap items-center gap-1.5 text-sm font-medium">
+                                                        {{ authorDisplayName(author) }}
+                                                        <span class="text-xs font-normal text-muted-foreground">{{ author.authorOrder }}. yazar</span>
+                                                        <Badge v-if="author.isCorrespondingAuthor" variant="outline" class="text-muted-foreground">Sorumlu yazar</Badge>
+                                                    </span>
+                                                    <span v-if="authorAffiliation(author)" class="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                                        <Building2 class="h-3 w-3 shrink-0" />
+                                                        {{ authorAffiliation(author) }}
+                                                    </span>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </DialogContent>
+                            </Dialog>
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <template v-if="internalAuthors.length">
+                            <h4 class="mb-3 text-sm font-semibold">Kurum İçi Yazarlar</h4>
+                            <ul class="divide-y">
+                                <li v-for="author in internalAuthors" :key="author.id" class="flex items-start justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
+                                    <div class="flex flex-col gap-1">
+                                        <span class="flex flex-wrap items-center gap-1.5 text-sm font-medium">
+                                            <button v-if="author.userId" @click="navigateTo(`/dashboard/academicians/${author.userId}`)" class="hover:text-blue-600 cursor-pointer">
+                                                {{ authorDisplayName(author) }}
+                                            </button>
+                                            <span v-else>{{ authorDisplayName(author) }}</span>
+                                            <span class="text-xs font-normal text-muted-foreground">{{ author.authorOrder }}. yazar</span>
+                                            <Badge v-if="author.isCorrespondingAuthor" variant="outline" class="text-muted-foreground">Sorumlu yazar</Badge>
+                                        </span>
+                                        <span v-if="authorAffiliation(author)" class="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                            <Building2 class="h-3 w-3 shrink-0" />
+                                            {{ authorAffiliation(author) }}
+                                        </span>
+                                    </div>
+                                    <Button variant="ghost" size="sm" @click="confirmRemoveAuthor(author.id)" class="h-8 w-8 p-0 text-red-600 hover:text-red-800 hover:bg-red-50 shrink-0" aria-label="Yazarı kaldır">
+                                        <Trash2 class="h-4 w-4" />
+                                    </Button>
+                                </li>
+                            </ul>
+                        </template>
+                        <p v-else class="text-sm text-muted-foreground">Kurum içi yazar bulunmuyor.</p>
+                    </CardContent>
+                </Card>
+
+                <!-- Dergi ve metrikleri -->
+                <Card>
+                    <CardHeader>
+                        <CardTitle class="flex items-center gap-2 text-base leading-snug">
+                            <BookOpen class="h-4 w-4 shrink-0 text-muted-foreground" />
+                            <span>{{ article.journalName }}</span>
+                        </CardTitle>
+                        <CardDescription v-if="article.journalAbbreviation && article.journalAbbreviation !== article.journalName">
+                            {{ article.journalAbbreviation }}
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent class="grid gap-2.5 text-sm">
+                        <div class="flex items-center justify-between">
+                            <span class="text-muted-foreground">Q Değeri</span>
+                            <Badge v-if="article.qValue" variant="outline" :class="qValueClass(article.qValue)">{{ article.qValue }}</Badge>
+                            <span v-else>—</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-muted-foreground">Etki Faktörü</span>
+                            <span class="font-semibold">{{ formatNumber(article.impactFactor) }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-muted-foreground">Yüzdelik</span>
+                            <span class="font-semibold">{{ formatNumber(article.percentile, 1) }}</span>
+                        </div>
+                        <div v-if="article.metricYear" class="flex items-center justify-between">
+                            <span class="text-muted-foreground">Metrik Yılı</span>
+                            <span class="flex items-center gap-1.5">
+                                {{ article.metricYear }}
+                                <Badge v-if="article.metricStatus === 'PROVISIONAL'" variant="outline" class="text-muted-foreground">Geçici</Badge>
+                            </span>
+                        </div>
+                        <Separator class="my-1" />
+                        <div class="flex items-center justify-between">
+                            <span class="text-muted-foreground">ISSN</span>
+                            <span>{{ article.journalIssn ?? '—' }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-muted-foreground">e-ISSN</span>
+                            <span>{{ article.journalEissn ?? '—' }}</span>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            <!-- Özet -->
+            <Card v-if="article.abstractText">
                 <CardHeader>
-                    <CardTitle class="flex items-center space-x-2">
-                        <Users class="h-5 w-5" />
-                        <span>Atanmış Yazarlar ({{ authorsList.length }})</span>
-                    </CardTitle>
-                    <!-- TODO: Yazar ekleme butonu, idas-api'ye kullanıcı arama endpoint'i eklenince geri gelecek -->
+                    <CardTitle>Özet</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div v-if="authorsList.length === 0" class="text-center py-8 text-muted-foreground">Bu makaleye atanmış kullanıcı bulunmuyor.</div>
-                    <div v-else class="space-y-3">
-                        <div v-for="author in authorsList" :key="author.id" class="flex items-center justify-between p-3 border rounded-lg transition-opacity">
-                            <div class="flex-1 flex items-center gap-2">
-                                <div>
-                                    <button @click="navigateTo(`/dashboard/academicians/${author.userId}`)" class="text-left transition-colors hover:text-blue-600 cursor-pointer">
-                                        <p class="font-medium">{{ author.userName }} {{ author.userSurname }}</p>
-                                    </button>
-                                    <p class="text-sm text-muted-foreground mt-1">{{ author.userEmail }}</p>
-                                </div>
-                                <Badge v-if="author.verifiedAt" variant="outline" class="text-xs ml-2 bg-emerald-50 text-emerald-700 border-emerald-200">Doğrulanmış</Badge>
-                            </div>
-                            <Button variant="ghost" size="sm" @click="confirmRemoveAuthor(author.id)" class="h-8 w-8 p-0 text-red-600 hover:text-red-800 hover:bg-red-50" aria-label="Yazarı kaldır">
-                                <Trash2 class="h-4 w-4" />
-                            </Button>
-                        </div>
+                    <p class="text-sm leading-relaxed text-muted-foreground">{{ article.abstractText }}</p>
+                </CardContent>
+            </Card>
+
+            <!-- Anahtar kelimeler -->
+            <Card v-if="keywords.length">
+                <CardHeader>
+                    <CardTitle class="flex items-center gap-2">
+                        <Tag class="h-5 w-5 text-muted-foreground" />
+                        Anahtar Kelimeler
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div class="flex flex-wrap gap-2">
+                        <Badge v-for="keyword in keywords" :key="keyword.id" variant="secondary">{{ keyword.keywordName }}</Badge>
                     </div>
                 </CardContent>
             </Card>
-        </div>
+        </template>
 
         <!-- Silme Dialog'u -->
         <Dialog v-model:open="showDeleteDialog">
@@ -314,7 +431,7 @@ const deleteArticle = async () => {
             </AlertDialogContent>
         </AlertDialog>
 
-        <!-- Kayıt bulunamadı durumu -->
+        <!-- Kayıt bulunamadı -->
         <Card v-if="!article && !loading && !error" class="max-w-md mx-auto shadow-md border-t-4 border-t-red-500">
             <CardHeader>
                 <CardTitle>Makale bulunamadı</CardTitle>
