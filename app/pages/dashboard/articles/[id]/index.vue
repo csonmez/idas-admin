@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Award, BookOpen, Building2, ExternalLink, Factory, Flag, Globe, LockOpen, Tag, Users, Zap, MoreHorizontal, Edit, Trash2 } from 'lucide-vue-next'
+import { Award, BookOpen, Building2, ExternalLink, Factory, Flag, Globe, LockOpen, Tag, Users, Zap, MoreHorizontal, Edit, Trash2, CirclePlus, Loader } from 'lucide-vue-next'
+import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -17,6 +19,14 @@ const isDeleting = ref(false)
 const showDeleteDialog = ref(false)
 const showRemoveDialog = ref(false)
 const pendingRemoveId = ref<string | null>(null)
+
+// Kurum içi yazar ekleme modalı (istek kısmı henüz bağlı değil — TODO)
+const showAddAuthorDialog = ref(false)
+const searchAcademician = ref('')
+const academicianResults = ref<{ id: string; name: string; surname: string }[]>([])
+const selectedAcademician = ref<{ id: string; name: string; surname: string } | null>(null)
+const newAuthorOrder = ref<number | ''>('')
+const newAuthorCorresponding = ref(false)
 
 // idas-api admin detay: GET /articles/:id -> { article, externalIds, keywords }
 const {
@@ -135,6 +145,36 @@ const removeAuthor = async (authorRowId: string) => {
     } catch {
         $toast({ title: 'Hata', description: 'Yazar kaldırılırken bir hata oluştu. Lütfen tekrar deneyiniz.', variant: 'destructive' })
     }
+}
+
+const resetAddAuthorForm = () => {
+    searchAcademician.value = ''
+    academicianResults.value = []
+    selectedAcademician.value = null
+    newAuthorOrder.value = ''
+    newAuthorCorresponding.value = false
+}
+
+// TODO: Akademisyen arama — develop'ta kullanıcı/akademisyen arama ucu henüz yok.
+// Uç eklenince burada GET ile aratıp sonuçları academicianResults'a dolduracağız.
+const searchAcademicians = async () => {
+    // TODO: uç gelince -> GET /users?search=... (veya /academicians) -> academicianResults
+}
+
+const selectAcademician = (a: { id: string; name: string; surname: string }) => {
+    selectedAcademician.value = a
+    academicianResults.value = []
+    searchAcademician.value = `${a.name} ${a.surname}`
+}
+
+// TODO (hoca: "istek atma kısmı en son kalsın"): kurum içi yazar ekleme isteği henüz bağlı değil.
+// Hazır olunca -> POST /articles/${articleId}/authors
+//   { fullName, isInternal: true, userId: selectedAcademician.id, authorOrder, isCorrespondingAuthor, source }
+// sonra refreshAuthors()
+const addInternalAuthor = async () => {
+    $toast({ title: 'Bilgi', description: 'Yazar ekleme isteği henüz bağlanmadı (akademisyen arama ucu bekleniyor).' })
+    showAddAuthorDialog.value = false
+    resetAddAuthorForm()
 }
 
 const deleteArticle = async () => {
@@ -258,6 +298,11 @@ const deleteArticle = async () => {
                                 <Users class="h-5 w-5 text-muted-foreground" />
                                 Yazar Bilgileri
                             </span>
+                            <div class="flex items-center gap-2">
+                            <Button variant="outline" size="sm" @click="showAddAuthorDialog = true">
+                                <CirclePlus class="h-4 w-4 mr-1" />
+                                Yazar Ekle
+                            </Button>
                             <Dialog v-if="externalAuthors.length">
                                 <DialogTrigger as-child>
                                     <Button variant="outline" size="sm">Kurum Dışı Yazarlar ({{ externalAuthors.length }})</Button>
@@ -285,6 +330,7 @@ const deleteArticle = async () => {
                                     </div>
                                 </DialogContent>
                             </Dialog>
+                            </div>
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -430,6 +476,53 @@ const deleteArticle = async () => {
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
+
+        <!-- Kurum İçi Yazar Ekleme Modalı (istek kısmı TODO — akademisyen arama ucu bekleniyor) -->
+        <Dialog
+            :open="showAddAuthorDialog"
+            @update:open="
+                (v) => {
+                    showAddAuthorDialog = v
+                    if (!v) resetAddAuthorForm()
+                }
+            "
+        >
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Yazar Ekle</DialogTitle>
+                    <DialogDescription>Atanacak akademisyeni seçin. (Alanlar zorunlu değildir.)</DialogDescription>
+                </DialogHeader>
+                <div class="grid gap-4 py-2">
+                    <div class="grid gap-2">
+                        <label class="text-sm font-medium">Akademisyen</label>
+                        <Input v-model="searchAcademician" placeholder="Akademisyen ara..." @input="searchAcademicians" />
+                        <p class="text-xs text-muted-foreground">Not: akademisyen arama ucu backend'e eklenince aktifleşecek.</p>
+                        <ul v-if="academicianResults.length" class="border rounded-md divide-y max-h-48 overflow-y-auto">
+                            <li v-for="a in academicianResults" :key="a.id" class="px-3 py-2 hover:bg-muted cursor-pointer" @click="selectAcademician(a)">
+                                {{ a.name }} {{ a.surname }}
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="grid gap-2">
+                        <label class="text-sm font-medium">Yazar Sırası</label>
+                        <Input v-model.number="newAuthorOrder" type="number" min="1" placeholder="Örn. 1" />
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <Checkbox :model-value="newAuthorCorresponding" @update:model-value="(v) => (newAuthorCorresponding = !!v)" />
+                        <label class="text-sm font-normal">Sorumlu yazar</label>
+                    </div>
+                </div>
+                <DialogFooter>
+                    <DialogClose as-child>
+                        <Button variant="outline">İptal</Button>
+                    </DialogClose>
+                    <Button @click="addInternalAuthor">
+                        <CirclePlus class="h-4 w-4 mr-2" />
+                        Ekle
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
 
         <!-- Kayıt bulunamadı -->
         <Card v-if="!article && !loading && !error" class="max-w-md mx-auto shadow-md border-t-4 border-t-red-500">

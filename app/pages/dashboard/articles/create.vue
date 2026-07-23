@@ -7,6 +7,7 @@ import type { GenericObject, SubmissionHandler } from 'vee-validate'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Textarea } from '@/components/ui/textarea'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command'
 import { cn } from '@/lib/utils'
@@ -20,7 +21,9 @@ const zodSchema = z.object({
     hasInternationalCollaboration: z.boolean().optional().default(false),
     hasIndustryCollaboration: z.boolean().optional().default(false),
     isOpenAccess: z.boolean().optional().default(false),
-    isEarlyAccess: z.boolean().optional().default(false)
+    isEarlyAccess: z.boolean().optional().default(false),
+    abstractText: z.string().optional(),
+    keywords: z.string().optional()
 })
 const formSchema = toTypedSchema(zodSchema)
 
@@ -116,13 +119,31 @@ const onSubmit: SubmissionHandler<GenericObject, GenericObject, unknown> = async
                 hasIndustryCollaboration: values.hasIndustryCollaboration,
                 isOpenAccess: values.isOpenAccess,
                 isEarlyAccess: values.isEarlyAccess,
+                abstractText: values.abstractText || null,
                 externalIds: values.wosId ? [{ source: 'WOS', externalId: values.wosId }] : []
             }
         })
 
+        const newArticleId = response.article.id
+
+        // Anahtar kelimeler ayrı uçtan eklenir (virgülle ayır): POST /articles/:id/keywords { name }
+        if (values.keywords) {
+            const names = (values.keywords as string)
+                .split(',')
+                .map((k) => k.trim())
+                .filter(Boolean)
+            for (const name of names) {
+                try {
+                    await useRequest(`/articles/${newArticleId}/keywords`, { method: 'POST', body: { name } })
+                } catch (e) {
+                    // tek bir kelimenin hatası tüm işlemi bozmasın
+                }
+            }
+        }
+
         isLoading.value = false
 
-        navigateTo(`/dashboard/articles/${response.article.id}?success=created`)
+        navigateTo(`/dashboard/articles/${newArticleId}?success=created`)
         resetForm()
     } catch (error) {
         isLoading.value = false
@@ -275,44 +296,68 @@ watch(journalPopoverOpen, (isOpen) => {
                             <FormMessage />
                         </FormItem>
                     </FormField>
-                    <FormField v-slot="{ value, handleChange }" type="checkbox" :value="true" :unchecked-value="false" name="hasNationalCollaboration">
-                        <FormItem class="flex flex-row items-center space-x-3 space-y-0">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+                        <div class="space-y-3">
+                            <FormField v-slot="{ value, handleChange }" type="checkbox" :value="true" :unchecked-value="false" name="hasNationalCollaboration">
+                                <FormItem class="flex flex-row items-center space-x-3 space-y-0">
+                                    <FormControl>
+                                        <Checkbox :model-value="value" @update:model-value="handleChange" />
+                                    </FormControl>
+                                    <FormLabel class="font-normal"> Ulusal iş birliği ile yayınlanmış makale </FormLabel>
+                                </FormItem>
+                            </FormField>
+                            <FormField v-slot="{ value, handleChange }" type="checkbox" :value="true" :unchecked-value="false" name="hasInternationalCollaboration">
+                                <FormItem class="flex flex-row items-center space-x-3 space-y-0">
+                                    <FormControl>
+                                        <Checkbox :model-value="value" @update:model-value="handleChange" />
+                                    </FormControl>
+                                    <FormLabel class="font-normal"> Uluslararası iş birliği ile yayınlanmış makale </FormLabel>
+                                </FormItem>
+                            </FormField>
+                            <FormField v-slot="{ value, handleChange }" type="checkbox" :value="true" :unchecked-value="false" name="hasIndustryCollaboration">
+                                <FormItem class="flex flex-row items-center space-x-3 space-y-0">
+                                    <FormControl>
+                                        <Checkbox :model-value="value" @update:model-value="handleChange" />
+                                    </FormControl>
+                                    <FormLabel class="font-normal"> Sanayi iş birliği ile yayınlanmış makale </FormLabel>
+                                </FormItem>
+                            </FormField>
+                        </div>
+                        <div class="space-y-3">
+                            <FormField v-slot="{ value, handleChange }" type="checkbox" :value="true" :unchecked-value="false" name="isOpenAccess">
+                                <FormItem class="flex flex-row items-center space-x-3 space-y-0">
+                                    <FormControl>
+                                        <Checkbox :model-value="value" @update:model-value="handleChange" />
+                                    </FormControl>
+                                    <FormLabel class="font-normal"> Açık erişim </FormLabel>
+                                </FormItem>
+                            </FormField>
+                            <FormField v-slot="{ value, handleChange }" type="checkbox" :value="true" :unchecked-value="false" name="isEarlyAccess">
+                                <FormItem class="flex flex-row items-center space-x-3 space-y-0">
+                                    <FormControl>
+                                        <Checkbox :model-value="value" @update:model-value="handleChange" />
+                                    </FormControl>
+                                    <FormLabel class="font-normal"> Early Access </FormLabel>
+                                </FormItem>
+                            </FormField>
+                        </div>
+                    </div>
+                    <FormField v-slot="{ componentField }" class="grid gap-2" name="abstractText">
+                        <FormItem>
+                            <FormLabel for="abstractText">Özet <span class="text-muted-foreground text-xs">(opsiyonel)</span></FormLabel>
                             <FormControl>
-                                <Checkbox :model-value="value" @update:model-value="handleChange" />
+                                <Textarea id="abstractText" placeholder="Makale özetini yazınız" :rows="4" v-bind="componentField" />
                             </FormControl>
-                            <FormLabel class="font-normal"> Ulusal iş birliği ile yayınlanmış makale </FormLabel>
+                            <FormMessage />
                         </FormItem>
                     </FormField>
-                    <FormField v-slot="{ value, handleChange }" type="checkbox" :value="true" :unchecked-value="false" name="hasInternationalCollaboration">
-                        <FormItem class="flex flex-row items-center space-x-3 space-y-0">
+                    <FormField v-slot="{ componentField }" class="grid gap-2" name="keywords">
+                        <FormItem>
+                            <FormLabel for="keywords">Anahtar Kelimeler <span class="text-muted-foreground text-xs">(virgülle ayırın, opsiyonel)</span></FormLabel>
                             <FormControl>
-                                <Checkbox :model-value="value" @update:model-value="handleChange" />
+                                <Input id="keywords" type="text" placeholder="ör. deep learning, transformer, nlp" v-bind="componentField" />
                             </FormControl>
-                            <FormLabel class="font-normal"> Uluslararası iş birliği ile yayınlanmış makale </FormLabel>
-                        </FormItem>
-                    </FormField>
-                    <FormField v-slot="{ value, handleChange }" type="checkbox" :value="true" :unchecked-value="false" name="hasIndustryCollaboration">
-                        <FormItem class="flex flex-row items-center space-x-3 space-y-0">
-                            <FormControl>
-                                <Checkbox :model-value="value" @update:model-value="handleChange" />
-                            </FormControl>
-                            <FormLabel class="font-normal"> Sanayi iş birliği ile yayınlanmış makale </FormLabel>
-                        </FormItem>
-                    </FormField>
-                    <FormField v-slot="{ value, handleChange }" type="checkbox" :value="true" :unchecked-value="false" name="isOpenAccess">
-                        <FormItem class="flex flex-row items-center space-x-3 space-y-0">
-                            <FormControl>
-                                <Checkbox :model-value="value" @update:model-value="handleChange" />
-                            </FormControl>
-                            <FormLabel class="font-normal"> Açık erişim </FormLabel>
-                        </FormItem>
-                    </FormField>
-                    <FormField v-slot="{ value, handleChange }" type="checkbox" :value="true" :unchecked-value="false" name="isEarlyAccess">
-                        <FormItem class="flex flex-row items-center space-x-3 space-y-0">
-                            <FormControl>
-                                <Checkbox :model-value="value" @update:model-value="handleChange" />
-                            </FormControl>
-                            <FormLabel class="font-normal"> Early Access </FormLabel>
+                            <FormMessage />
                         </FormItem>
                     </FormField>
                     <Button type="submit" class="w-full" :disabled="isLoading">

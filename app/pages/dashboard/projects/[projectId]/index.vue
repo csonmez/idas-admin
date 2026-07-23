@@ -53,6 +53,34 @@ const showRemoveExecutorDialog = ref(false)
 const showDeleteDialog = ref(false)
 const isDeleting = ref(false)
 
+// Proje yürütücüsü ekleme modalı (istek kısmı henüz bağlı değil — TODO, akademisyen arama ucu bekleniyor)
+const showAddExecutorDialog = ref(false)
+const searchAcademician = ref('')
+const academicianResults = ref<{ id: string; name: string; surname: string }[]>([])
+const selectedAcademician = ref<{ id: string; name: string; surname: string } | null>(null)
+
+const resetAddExecutor = () => {
+    searchAcademician.value = ''
+    academicianResults.value = []
+    selectedAcademician.value = null
+}
+// TODO: Akademisyen arama ucu idas-api'de yok; gelince GET ile aratılacak.
+const searchAcademicians = async () => {
+    // TODO: uç gelince -> GET /users?search=... -> academicianResults
+}
+const selectAcademician = (a: { id: string; name: string; surname: string }) => {
+    selectedAcademician.value = a
+    academicianResults.value = []
+    searchAcademician.value = `${a.name} ${a.surname}`
+}
+// TODO: yürütücü ekleme isteği henüz bağlı değil (hoca: ayrı olsun, istek en son).
+// Hazır olunca -> POST /projects/${projectId}/users { userId: selectedAcademician.id } sonra refresh()
+const addExecutor = async () => {
+    $toast({ title: 'Bilgi', description: 'Yürütücü ekleme isteği henüz bağlanmadı (akademisyen arama ucu bekleniyor).' })
+    showAddExecutorDialog.value = false
+    resetAddExecutor()
+}
+
 const removeUserFromProject = async () => {
     const userProjectId = projectExecutor.value?.userProjectId
     if (!userProjectId) return
@@ -300,11 +328,16 @@ watch(isOpenBudgetDialog, (open) => {
                 <div class="md:col-span-2">
                     <Card class="shadow-sm hover:shadow-md transition-shadow rounded-xl h-full flex flex-col">
                         <CardHeader>
-                            <CardTitle class="text-base sm:text-lg flex items-center gap-2">
-                                <UserIcon class="h-4 w-4 flex-shrink-0" />
-                                <span>Proje Yürütücüsü</span>
-                            </CardTitle>
-                            <!-- TODO: Yürütücü ekleme butonu, idas-api'ye kullanıcı arama endpoint'i eklenince geri gelecek -->
+                            <div class="flex items-center justify-between">
+                                <CardTitle class="text-base sm:text-lg flex items-center gap-2">
+                                    <UserIcon class="h-4 w-4 flex-shrink-0" />
+                                    <span>Proje Yürütücüsü</span>
+                                </CardTitle>
+                                <Button v-if="!projectExecutor" variant="outline" size="sm" @click="showAddExecutorDialog = true">
+                                    <CirclePlus class="h-4 w-4 mr-1" />
+                                    Yürütücü Ekle
+                                </Button>
+                            </div>
                         </CardHeader>
                         <CardContent class="px-4 sm:px-5 pb-4 pt-0 flex-1">
                             <div v-if="projectExecutor" class="p-4 rounded-lg border border-border/50 space-y-2 bg-muted/40">
@@ -408,6 +441,44 @@ watch(isOpenBudgetDialog, (open) => {
                     <Button :disabled="isAddingBudget" @click="addBudget">
                         <Loader v-if="isAddingBudget" class="h-4 w-4 mr-2 animate-spin" />
                         {{ isAddingBudget ? 'Ekleniyor...' : 'Ekle' }}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+        <!-- Yürütücü Ekleme Modalı (istek kısmı TODO — akademisyen arama ucu bekleniyor) -->
+        <Dialog
+            v-if="project"
+            :open="showAddExecutorDialog"
+            @update:open="
+                (v) => {
+                    showAddExecutorDialog = v
+                    if (!v) resetAddExecutor()
+                }
+            "
+        >
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Yürütücü Ekle</DialogTitle>
+                    <DialogDescription>Atanacak akademisyeni seçin.</DialogDescription>
+                </DialogHeader>
+                <div class="grid gap-2 py-2">
+                    <label class="text-sm font-medium">Akademisyen</label>
+                    <Input v-model="searchAcademician" placeholder="Akademisyen ara..." @input="searchAcademicians" />
+                    <p class="text-xs text-muted-foreground">Not: akademisyen arama ucu backend'e eklenince aktifleşecek.</p>
+                    <ul v-if="academicianResults.length" class="border rounded-md divide-y max-h-48 overflow-y-auto">
+                        <li v-for="a in academicianResults" :key="a.id" class="px-3 py-2 hover:bg-muted cursor-pointer" @click="selectAcademician(a)">
+                            {{ a.name }} {{ a.surname }}
+                        </li>
+                    </ul>
+                </div>
+                <DialogFooter>
+                    <DialogClose as-child>
+                        <Button variant="outline">İptal</Button>
+                    </DialogClose>
+                    <Button @click="addExecutor">
+                        <CirclePlus class="h-4 w-4 mr-2" />
+                        Ekle
                     </Button>
                 </DialogFooter>
             </DialogContent>

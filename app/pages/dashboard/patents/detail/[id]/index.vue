@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Award, Users, Trash2, Clock, Globe, Home, Factory, MoreHorizontal, Edit, FileText } from 'lucide-vue-next'
+import { Award, Users, Trash2, Clock, Globe, Home, Factory, MoreHorizontal, Edit, FileText, CirclePlus } from 'lucide-vue-next'
+import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -15,6 +16,34 @@ const isDeleting = ref(false)
 const showDeleteDialog = ref(false)
 const showRemoveDialog = ref(false)
 const pendingRemoveUserId = ref<string | null>(null)
+
+// Araştırmacı ekleme modalı (istek kısmı henüz bağlı değil — TODO, akademisyen arama ucu bekleniyor)
+const showAddResearcherDialog = ref(false)
+const searchAcademician = ref('')
+const academicianResults = ref<{ id: string; name: string; surname: string }[]>([])
+const selectedAcademician = ref<{ id: string; name: string; surname: string } | null>(null)
+
+const resetAddResearcher = () => {
+    searchAcademician.value = ''
+    academicianResults.value = []
+    selectedAcademician.value = null
+}
+// TODO: Akademisyen arama ucu idas-api'de yok; gelince GET ile aratılacak.
+const searchAcademicians = async () => {
+    // TODO: uç gelince -> GET /users?search=... -> academicianResults
+}
+const selectAcademician = (a: { id: string; name: string; surname: string }) => {
+    selectedAcademician.value = a
+    academicianResults.value = []
+    searchAcademician.value = `${a.name} ${a.surname}`
+}
+// TODO: araştırmacı ekleme isteği henüz bağlı değil (hoca: ayrı olsun, istek en son).
+// Hazır olunca -> PUT /patents/admin/${patentId} { userIds: [...mevcut, selectedAcademician.id] } sonra refresh()
+const addResearcher = async () => {
+    $toast({ title: 'Bilgi', description: 'Araştırmacı ekleme isteği henüz bağlanmadı (akademisyen arama ucu bekleniyor).' })
+    showAddResearcherDialog.value = false
+    resetAddResearcher()
+}
 
 // idas-api admin detay: GET /patents/admin/:id -> patent + authors[]
 const {
@@ -220,11 +249,16 @@ const deletePatent = async () => {
             <!-- Araştırmacılar -->
             <Card class="w-full max-w-full">
                 <CardHeader>
-                    <CardTitle class="flex items-center space-x-2">
-                        <Users class="h-5 w-5" />
-                        <span>Araştırmacılar ({{ researchersList.length }})</span>
-                    </CardTitle>
-                    <!-- TODO: Araştırmacı ekleme, idas-api'ye kullanıcı arama endpoint'i eklenince geri gelecek -->
+                    <div class="flex items-center justify-between">
+                        <CardTitle class="flex items-center space-x-2">
+                            <Users class="h-5 w-5" />
+                            <span>Araştırmacılar ({{ researchersList.length }})</span>
+                        </CardTitle>
+                        <Button variant="outline" size="sm" @click="showAddResearcherDialog = true">
+                            <CirclePlus class="h-4 w-4 mr-1" />
+                            Araştırmacı Ekle
+                        </Button>
+                    </div>
                 </CardHeader>
                 <CardContent>
                     <div v-if="researchersList.length === 0" class="text-center py-8 text-muted-foreground">
@@ -290,6 +324,43 @@ const deletePatent = async () => {
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
+
+        <!-- Araştırmacı Ekleme Modalı (istek kısmı TODO — akademisyen arama ucu bekleniyor) -->
+        <Dialog
+            :open="showAddResearcherDialog"
+            @update:open="
+                (v) => {
+                    showAddResearcherDialog = v
+                    if (!v) resetAddResearcher()
+                }
+            "
+        >
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Araştırmacı Ekle</DialogTitle>
+                    <DialogDescription>Atanacak akademisyeni seçin.</DialogDescription>
+                </DialogHeader>
+                <div class="grid gap-2 py-2">
+                    <label class="text-sm font-medium">Akademisyen</label>
+                    <Input v-model="searchAcademician" placeholder="Akademisyen ara..." @input="searchAcademicians" />
+                    <p class="text-xs text-muted-foreground">Not: akademisyen arama ucu backend'e eklenince aktifleşecek.</p>
+                    <ul v-if="academicianResults.length" class="border rounded-md divide-y max-h-48 overflow-y-auto">
+                        <li v-for="a in academicianResults" :key="a.id" class="px-3 py-2 hover:bg-muted cursor-pointer" @click="selectAcademician(a)">
+                            {{ a.name }} {{ a.surname }}
+                        </li>
+                    </ul>
+                </div>
+                <DialogFooter>
+                    <DialogClose as-child>
+                        <Button variant="outline">İptal</Button>
+                    </DialogClose>
+                    <Button @click="addResearcher">
+                        <CirclePlus class="h-4 w-4 mr-2" />
+                        Ekle
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
 
         <!-- Bulunamadı -->
         <Card v-if="!patent && !loading && !error" class="max-w-md mx-auto shadow-md border-t-4 border-t-red-500">
