@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ComputedRef } from 'vue'
-import { Info, Home, TrendingUp, BarChart3, Target, ScrollText, Shapes, BrainCircuit, Award, Users, School, BarChart, Activity, BrickWall, ClipboardCheck, BadgeCheck } from 'lucide-vue-next'
+import { Info, Home, TrendingUp, BarChart3, Target, ScrollText, Shapes, BrainCircuit, Award, Users, School, BarChart, Activity, BrickWall, ClipboardCheck, BadgeCheck, Building2 } from 'lucide-vue-next'
 import NavMain from '@/components/NavMain.vue'
 import NavUser from '@/components/NavUser.vue'
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, type SidebarProps } from '@/components/ui/sidebar'
@@ -66,6 +66,11 @@ const data = {
                     title: 'Ödüller',
                     icon: Award,
                     url: '/dashboard/prizes'
+                },
+                {
+                    title: 'Firmalar',
+                    icon: Building2,
+                    url: '/dashboard/companies'
                 }
                 /* {
                     title: 'Doktora',
